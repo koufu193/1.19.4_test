@@ -4,7 +4,8 @@ import io.github.koufu193.core.game.commands.CommandExecutor;
 import io.github.koufu193.core.game.data.GameProfile;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
-import io.github.koufu193.core.properties.Properties;
+import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHandler;
+import io.github.koufu193.core.game.world.World;
 
 public interface IPlayer extends CommandExecutor,IEntity {
     Player.GameMode gameMode();
@@ -23,7 +24,9 @@ public interface IPlayer extends CommandExecutor,IEntity {
     void expProgress(float progress);
     void expLevel(int level);
     void totalExpPoints(int points);
-    PlayerPacketHandler handler();
+    PlayerPacketHandler packetHandler();
     String name();
     GameProfile profile();
+    World world();
+    PlayerMovementHandler movementHandler();
 }

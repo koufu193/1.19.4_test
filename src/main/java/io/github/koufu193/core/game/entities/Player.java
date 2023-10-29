@@ -4,19 +4,18 @@ import io.github.koufu193.core.game.data.GameProfile;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.handlers.V1194PlayerPacketHandler;
+import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHandler;
 import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 
+import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
 import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 public class Player extends Entity implements IPlayer{
     private final AsynchronousSocketChannel channel;
@@ -28,7 +27,8 @@ public class Player extends Entity implements IPlayer{
     protected int expLevel;
     protected float expProgress;
     private GameProfile profile;
-    private final PlayerPacketHandler handler;
+    private final PlayerPacketHandler packetHandler;
+    private final PlayerMovementHandler movementHandler=new PlayerMovementHandler(this);
     public Player(MinecraftServer server,AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt,GameProfile profile) {
         super(server,entityId,nbt,server.worldFromDimension(Objects.requireNonNull(nbt.getString("Dimension"))));
         this.channel=channel;
@@ -41,7 +41,7 @@ public class Player extends Entity implements IPlayer{
         this.totalExpPoints=(int)nbt.getOrPut("XpTotal",()->NBT.Int(0)).getValue();
         this.expLevel=(int)nbt.getOrPut("XpLevel",()->NBT.Int(0)).getValue();
         this.expProgress=(float)nbt.getOrPut("XpP",()->NBT.Float(0)).getValue();
-        this.handler=new V1194PlayerPacketHandler(this.channel);
+        this.packetHandler =new V1194PlayerPacketHandler(this.channel);
         this.profile=profile;
     }
 
@@ -99,7 +99,7 @@ public class Player extends Entity implements IPlayer{
         if(progress<0||1<progress) throw new IllegalArgumentException("Experience progress must be between 0 and 1");
         this.expProgress=progress;
         this.nbt.setFloat("XpP",progress);
-        this.handler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
+        this.packetHandler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
     }
 
     @Override
@@ -107,7 +107,7 @@ public class Player extends Entity implements IPlayer{
         if(level<0) throw new IllegalArgumentException("Experience level must not be negative");
         this.expLevel=level;
         this.nbt.setInt("XpLevel",level);
-        this.handler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
+        this.packetHandler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
     }
 
     @Override
@@ -115,7 +115,7 @@ public class Player extends Entity implements IPlayer{
         if(points<0) throw new IllegalArgumentException("Total experience points must not be negative");
         this.totalExpPoints=points;
         this.nbt.setInt("XpTotal",points);
-        this.handler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
+        this.packetHandler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
     }
     @Override
     public MainHand mainHand() {
@@ -144,18 +144,18 @@ public class Player extends Entity implements IPlayer{
         return this.abilities;
     }
 
-    public void property(Property property) {
+    protected void property(Property property) {
         this.property = property;
     }
 
     @Override
     public void teleport(@NotNull Location location) {
-        this.handler.teleport(location);
+        this.packetHandler.teleport(location);
         this.location=location;
     }
 
-    public PlayerPacketHandler handler() {
-        return handler;
+    public PlayerPacketHandler packetHandler() {
+        return packetHandler;
     }
 
     @Override
@@ -171,9 +171,22 @@ public class Player extends Entity implements IPlayer{
     protected void name(@NotNull String name){
         this.profile=new GameProfile(profile.id(),name,profile.properties());
     }
+    public void location(@NotNull Location location){
+        this.location=location;
+    }
 
     public AsynchronousSocketChannel channel() {
         return channel;
+    }
+
+    @Override
+    public World world() {
+        return this.location!=null?location.world():null;
+    }
+
+    @Override
+    public PlayerMovementHandler movementHandler() {
+        return this.movementHandler;
     }
 
     public enum GameMode{

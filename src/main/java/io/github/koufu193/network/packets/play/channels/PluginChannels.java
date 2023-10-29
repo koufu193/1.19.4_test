@@ -15,7 +15,7 @@ public final class PluginChannels {
     }};
     public static IPluginChannel get(Identifier identifier){
 
-        return (IPluginChannel) channels.getOrDefault(identifier,()->new IPluginChannel() {
+        return channels.getOrDefault(identifier,()->new IPluginChannel() {
             @Override
             public Identifier channel() {
                 return identifier;
@@ -30,6 +30,6 @@ public final class PluginChannels {
             public void load(ByteBuffer buffer) {
 
             }
-        });//Objects.requireNonNull(channels.get(identifier),"Invalid Identifier "+identifier).get();
+        }).get();//Objects.requireNonNull(channels.get(identifier),"Invalid Identifier "+identifier).get();
     }
 }
