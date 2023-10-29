@@ -1,8 +1,11 @@
 package io.github.koufu193.network.packets.play;
 
+import io.github.koufu193.core.game.commands.ids.V1194ParserIds;
 import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
+import io.github.koufu193.core.game.commands.nodes.arguments.ArgumentCommandNode;
+import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
@@ -39,7 +42,11 @@ public class ClientboundCommandsPacket extends AbstractPacket {
                     for(ICommandNode child:node.children()) output.writeBytes(DataTypes.VarInt.encode(ids.get(child)));
                     if(node.redirect()!=null) output.writeBytes(DataTypes.VarInt.encode(ids.get(node.redirect())));
                     if(!(node instanceof RootCommandNode)) output.writeBytes(DataTypes.String.encode(node.name()));
-                    //TODO
+                    if(node instanceof ArgumentCommandNode<?> argumentNode){
+                        output.writeBytes(DataTypes.VarInt.encode(V1194ParserIds.instance().getId(argumentNode.parserId())));
+                        output.writeBytes(argumentNode.properties());
+                        if(argumentNode.suggestionType()!=null) output.writeBytes(DataTypes.Identifier.encode(argumentNode.suggestionType()));
+                    }
                 }
                 output.writeBytes(DataTypes.VarInt.encode(ids.get(value)));
                 return output.toByteArray();
@@ -55,6 +62,10 @@ public class ClientboundCommandsPacket extends AbstractPacket {
                 byte flag= (byte) (node.getClass()==RootCommandNode.class?0:node.getClass()==LiteralCommandNode.class?1:2);
                 flag|=(node.executable()?0x04:0x00);
                 flag|=(node.redirect()!=null?0x08:0x00);
+                if(node instanceof ArgumentCommandNode<?> argumentNode){
+                    Identifier suggestionType=argumentNode.suggestionType();
+                    flag|=(suggestionType!=null?0x10:0x00);
+                }
                 //TODO
                 return flag;
             }

@@ -1,11 +1,15 @@
 package io.github.koufu193.network.handlers;
 
 
+import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
+import io.github.koufu193.core.game.commands.nodes.arguments.StringCommandNode;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
+import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
@@ -20,6 +24,7 @@ import org.jglrxavpok.hephaistos.nbt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -32,7 +37,7 @@ public class PlayHandler implements IHandler {
     public PlayHandler(Player player) {
         this.player = player;
         try {
-            registryCodec = DataTypes.NBT.decode(ByteBuffer.wrap(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("RegistryCodec.nbt"),"RegistryCodec.nbt not found").readAllBytes()));
+            registryCodec = DataTypes.NBT.decode(ByteBuffer.wrap(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("RegistryCodec.nbt"), "RegistryCodec.nbt not found").readAllBytes()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -58,24 +63,30 @@ public class PlayHandler implements IHandler {
                 player.handler().sendChunk(world.chunk(x,z));
             }
         }*/
-        player.packetHandler().sendChunk(world.chunk(0,0));
+        player.packetHandler().sendChunk(world.chunk(0, 0));
         player.teleport(player.location().y(256).x(5).z(5));
-        player.packetHandler().sendCommandNode(
+        RootCommandNode rootNode = (
                 RootCommandNode.root().then(root ->
                         LiteralCommandNode.literal("hello").then(
                                 LiteralCommandNode.literal("aiueo").then(LiteralCommandNode.literal("what")).redirect(root)
                         )
                 ).then(
-                        LiteralCommandNode.literal("what")
+                        LiteralCommandNode.literal("what").execute((executor,command)->{
+                            if(executor instanceof IPlayer player){
+                                player.packetHandler().sendSystemMessage(new TextComponent(command.rawCommand()),false);
+                            }
+                        }).then(StringCommandNode.string("tess", StringCommandNode.StringType.SINGLE_WORD)).then(StringCommandNode.string("ai", StringCommandNode.StringType.QUOTABLE_PHRASE))
                 )
         );
-        AbstractPacket pak=null;
-        while((pak=PacketDecoder.getDecoder().decode(channel,PlayPackets.getPackets()))!=null) {
+        player.packetHandler().sendCommandNode(rootNode);
+        AbstractPacket pak = null;
+        while ((pak = PacketDecoder.getDecoder().decode(channel, PlayPackets.getPackets())) != null) {
             if (pak instanceof ServerboundSetPlayerPositionAndRotationPacket packet) {
                 Location location = packet.toLocation();
                 if (player.movementHandler().canMoveTo(location)) player.location(location);
-            }else if(pak instanceof ServerboundChatCommandPacket){
-                System.out.println(pak);
+            } else if (pak instanceof ServerboundChatCommandPacket packet) {
+                String[] v=packet.command().split(" ");
+                player.packetHandler().sendSystemMessage(new TextComponent(packet.command()),false);
             }
         }
         while (true) {

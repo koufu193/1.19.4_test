@@ -4,4 +4,5 @@ public interface Command {
     Object args(int index);
     Object args(String name);
     Command redirect();
+    String rawCommand();
 }

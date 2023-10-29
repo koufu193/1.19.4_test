@@ -3,6 +3,7 @@ package io.github.koufu193.network.packets.play;
 import io.github.koufu193.exceptions.InvalidPacketIdException;
 import io.github.koufu193.network.IPackets;
 import io.github.koufu193.network.packets.AbstractPacket;
+import io.github.koufu193.network.packets.ServerboundSetPlayerRotationPacket;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class PlayPackets implements IPackets {
             reg(ServerboundConfirmTeleportationPacket::new);
             reg(ServerboundSetPlayerPositionPacket::new);
             reg(ServerboundChatCommandPacket::new);
+            reg(ServerboundSetPlayerRotationPacket::new);
         }
 
         private void reg(Supplier<AbstractPacket> supp) {
