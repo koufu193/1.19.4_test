@@ -13,7 +13,7 @@ import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.*;
 import io.github.koufu193.network.packets.play.channels.BrandChannel;
-import io.github.koufu193.network.packets.play.channels.ServerboundChatCommandPacket;
+import io.github.koufu193.network.packets.play.ServerboundChatCommandPacket;
 import io.github.koufu193.server.MinecraftServer;
 import org.jglrxavpok.hephaistos.nbt.*;
 

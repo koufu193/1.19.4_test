@@ -1,4 +1,4 @@
-package io.github.koufu193.network.packets.play.channels;
+package io.github.koufu193.network.packets.play;
 
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
