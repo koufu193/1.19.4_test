@@ -7,6 +7,8 @@ import java.util.HashMap;
 
 public class V1194ParserIds implements ParserIds{
     private static final HashMap<Identifier,Integer> ids=new HashMap<>(){{
+        put(new Identifier("brigadier:bool"),0);
+        put(new Identifier("brigadier:integer"),3);
         put(new Identifier("brigadier:string"),5);
     }};
     private static final V1194ParserIds INSTANCE=new V1194ParserIds();

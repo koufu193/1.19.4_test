@@ -3,7 +3,6 @@ package io.github.koufu193.network.packets.play;
 import io.github.koufu193.exceptions.InvalidPacketIdException;
 import io.github.koufu193.network.IPackets;
 import io.github.koufu193.network.packets.AbstractPacket;
-import io.github.koufu193.network.packets.ServerboundSetPlayerRotationPacket;
 
 import java.util.HashMap;
 import java.util.Map;

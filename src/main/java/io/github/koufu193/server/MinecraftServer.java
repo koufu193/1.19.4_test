@@ -64,7 +64,7 @@ public class MinecraftServer {
         return this.worlds.values();
     }
     public World worldFromDimension(String dimension){
-        if("overworld".equals(dimension)) return this.world("world");
+        if("minecraft:overworld".equals(dimension)) return this.world("world");
         return this.world(dimension);
     }
 }

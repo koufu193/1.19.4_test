@@ -1,10 +1,11 @@
 package io.github.koufu193.network.handlers;
 
 
-import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
-import io.github.koufu193.core.game.commands.nodes.arguments.StringCommandNode;
+import io.github.koufu193.core.game.commands.nodes.arguments.BoolArgumentNode;
+import io.github.koufu193.core.game.commands.nodes.arguments.IntegerArgumentNode;
+import io.github.koufu193.core.game.commands.nodes.arguments.StringArgumentNode;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.component.TextComponent;
@@ -71,22 +72,25 @@ public class PlayHandler implements IHandler {
                                 LiteralCommandNode.literal("aiueo").then(LiteralCommandNode.literal("what")).redirect(root)
                         )
                 ).then(
-                        LiteralCommandNode.literal("what").execute((executor,command)->{
-                            if(executor instanceof IPlayer player){
-                                player.packetHandler().sendSystemMessage(new TextComponent(command.rawCommand()),false);
+                        LiteralCommandNode.literal("what").execute((executor, command) -> {
+                            if (executor instanceof IPlayer player) {
+                                player.packetHandler().sendSystemMessage(new TextComponent(command.rawCommand()), false);
                             }
-                        }).then(StringCommandNode.string("tess", StringCommandNode.StringType.SINGLE_WORD)).then(StringCommandNode.string("ai", StringCommandNode.StringType.QUOTABLE_PHRASE))
+                        }).then(StringArgumentNode.string("zz", StringArgumentNode.StringType.SINGLE_WORD)).then(BoolArgumentNode.bool("whats").then(IntegerArgumentNode.integer("?")))
                 )
         );
         player.packetHandler().sendCommandNode(rootNode);
         AbstractPacket pak = null;
         while ((pak = PacketDecoder.getDecoder().decode(channel, PlayPackets.getPackets())) != null) {
-            if (pak instanceof ServerboundSetPlayerPositionAndRotationPacket packet) {
-                Location location = packet.toLocation();
-                if (player.movementHandler().canMoveTo(location)) player.location(location);
+            if (pak instanceof ServerboundMovementPacket packet) {
+                Location location = packet.toLocation(player.location());
+                if (player.movementHandler().canMoveTo(location)) {
+                    player.location(location);
+                    if (!(packet instanceof ServerboundSetPlayerRotationPacket))
+                        player.packetHandler().sendSystemMessage(new TextComponent(String.format("pos:{%.2f,%.2f,%.2f}", location.x(), location.y(), location.z())), false);
+                }
             } else if (pak instanceof ServerboundChatCommandPacket packet) {
-                String[] v=packet.command().split(" ");
-                player.packetHandler().sendSystemMessage(new TextComponent(packet.command()),false);
+                player.packetHandler().sendSystemMessage(new TextComponent(Arrays.deepToString(packet.fields())), false);
             }
         }
         while (true) {

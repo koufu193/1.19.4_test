@@ -110,6 +110,6 @@ public class Location implements Cloneable{
 
     @Override
     public Location clone(){
-        return new Location(x(),y(),z()).pitch(pitch()).yaw(yaw());
+        return new Location(world(),x(),y(),z(),yaw(),pitch());
     }
 }
