@@ -60,11 +60,10 @@ public class ClientboundCommandsPacket extends AbstractPacket {
 
             private byte makeFlag(ICommandNode node){
                 byte flag= (byte) (node.getClass()==RootCommandNode.class?0:node.getClass()==LiteralCommandNode.class?1:2);
-                flag|=(node.executable()?0x04:0x00);
-                flag|=(node.redirect()!=null?0x08:0x00);
+                if(node.executable()) flag|=0x04;
+                if(node.redirect()!=null) flag|=0x08;
                 if(node instanceof ArgumentCommandNode<?> argumentNode){
-                    Identifier suggestionType=argumentNode.suggestionType();
-                    flag|=(suggestionType!=null?0x10:0x00);
+                    if(argumentNode.suggestionType()!=null) flag|=0x10;
                 }
                 //TODO
                 return flag;
