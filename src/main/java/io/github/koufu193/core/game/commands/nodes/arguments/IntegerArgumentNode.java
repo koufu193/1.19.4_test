@@ -37,17 +37,30 @@ public class IntegerArgumentNode extends ArgumentCommandNode<Integer>{
 
     @Override
     public byte[] properties() {
-        byte flag=0;
-        flag|=(this.min!=Integer.MIN_VALUE?0x01:0x00);
-        flag|=(this.max!=Integer.MAX_VALUE?0x02:0x00);
-        int printInts=(this.min!=Integer.MIN_VALUE?1:0)+(this.min!=Integer.MAX_VALUE?1:0);
-        ByteArrayOutputStream output=new ByteArrayOutputStream(1+printInts*Integer.BYTES);
-        output.write(flag);
-        if(this.min!=Integer.MIN_VALUE) output.writeBytes(DataTypes.Int.encode(this.min));
-        if(this.max!=Integer.MAX_VALUE) output.writeBytes(DataTypes.Int.encode(this.max));
+        ByteArrayOutputStream output=new ByteArrayOutputStream(this.size());
+        output.write(this.flag());
+        if(this.needToSendMinValue()) output.writeBytes(DataTypes.Int.encode(this.min));
+        if(this.needToSendMaxValue()) output.writeBytes(DataTypes.Int.encode(this.max));
         return output.toByteArray();
     }
-
+    private boolean needToSendMaxValue(){
+        return this.max!=Integer.MAX_VALUE;
+    }
+    private boolean needToSendMinValue(){
+        return this.min!=Integer.MIN_VALUE;
+    }
+    private byte flag(){
+        byte flag=0;
+        if(this.needToSendMinValue()) flag|=0x01;
+        if(this.needToSendMaxValue()) flag|=0x02;
+        return flag;
+    }
+    private int size(){
+        int size=1;
+        if(this.needToSendMinValue()) size+=Integer.BYTES;
+        if(this.needToSendMaxValue()) size+=Integer.BYTES;
+        return size;
+    }
     public int max() {
         return this.max;
     }
