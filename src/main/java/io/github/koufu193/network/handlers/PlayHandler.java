@@ -1,6 +1,9 @@
 package io.github.koufu193.network.handlers;
 
 
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.context.CommandContext;
+import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.BoolArgumentNode;
@@ -20,6 +23,8 @@ import io.github.koufu193.network.packets.play.*;
 import io.github.koufu193.network.packets.play.channels.BrandChannel;
 import io.github.koufu193.network.packets.play.ServerboundChatCommandPacket;
 import io.github.koufu193.server.MinecraftServer;
+import net.minecraft.commands.CommandListenerWrapper;
+import net.minecraft.commands.arguments.coordinates.ArgumentPosition;
 import org.jglrxavpok.hephaistos.nbt.*;
 
 import java.io.*;
@@ -67,30 +72,26 @@ public class PlayHandler implements IHandler {
         player.packetHandler().sendChunk(world.chunk(0, 0));
         player.teleport(player.location().y(256).x(5).z(5));
         RootCommandNode rootNode = (
-                RootCommandNode.root().then(root ->
-                        LiteralCommandNode.literal("hello").then(
-                                LiteralCommandNode.literal("aiueo").then(LiteralCommandNode.literal("what")).redirect(root)
+                RootCommandNode.root().then(
+                        LiteralCommandNode.literal("msg").then(
+                                StringArgumentNode.string("message", StringArgumentNode.StringType.GREEDY_PHRASE).execute(
+                                        (
+                                                (executor, command) ->((IPlayer)executor).packetHandler().sendSystemMessage(new TextComponent((String)command.args("message")))
+                                        )
+                                )
                         )
-                ).then(
-                        LiteralCommandNode.literal("what").execute((executor, command) -> {
-                            if (executor instanceof IPlayer player) {
-                                player.packetHandler().sendSystemMessage(new TextComponent(command.rawCommand()), false);
-                            }
-                        }).then(StringArgumentNode.string("zz", StringArgumentNode.StringType.SINGLE_WORD)).then(BoolArgumentNode.bool("whats").then(IntegerArgumentNode.integer("?")))
                 )
         );
         player.packetHandler().sendCommandNode(rootNode);
         AbstractPacket pak = null;
         while ((pak = PacketDecoder.getDecoder().decode(channel, PlayPackets.getPackets())) != null) {
             if (pak instanceof ServerboundMovementPacket packet) {
-                Location location = packet.toLocation(player.location());
-                if (player.movementHandler().canMoveTo(location)) {
-                    player.location(location);
-                    if (!(packet instanceof ServerboundSetPlayerRotationPacket))
-                        player.packetHandler().sendSystemMessage(new TextComponent(String.format("pos:{%.2f,%.2f,%.2f}", location.x(), location.y(), location.z())), false);
+                if (!(pak instanceof ServerboundSetPlayerRotationPacket)) {
+                    player.location(((ServerboundMovementPacket) pak).toLocation(player.location()));
                 }
             } else if (pak instanceof ServerboundChatCommandPacket packet) {
-                player.packetHandler().sendSystemMessage(new TextComponent(Arrays.deepToString(packet.fields())), false);
+                Command command = Command.parse(packet.command(), rootNode);
+                command.node().execute(player, command);
             }
         }
         while (true) {

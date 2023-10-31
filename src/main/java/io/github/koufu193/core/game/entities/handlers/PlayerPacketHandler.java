@@ -22,6 +22,9 @@ public interface PlayerPacketHandler {
     void sendChunk(@NotNull Chunk chunk);
     void sendCommandNode(@NotNull RootCommandNode root);
     void sendSystemMessage(@NotNull TextComponent component,boolean onActionBar);
+    default void sendSystemMessage(@NotNull TextComponent component){
+        sendSystemMessage(component,false);
+    }
     void sendLightData(@NotNull LightData light);
     void sendActionBarText(@NotNull TextComponent component);
     void setChunkCenter(int chunkX, int chunkZ);

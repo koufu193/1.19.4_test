@@ -5,6 +5,7 @@ import io.github.koufu193.core.game.commands.CommandExecutor;
 import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.network.data.DataTypes;
+import io.github.koufu193.util.StringCommandReader;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -16,8 +17,8 @@ public class StringArgumentNode extends ArgumentCommandNode<String> {
     private final StringType type;
 
     @Override
-    public String parse(String argument) {
-        return null;
+    public String parse(StringCommandReader reader) {
+        return this.type.read(reader);
     }
 
     @NotNull
@@ -58,6 +59,19 @@ public class StringArgumentNode extends ArgumentCommandNode<String> {
     }
 
     public enum StringType {
-        SINGLE_WORD,QUOTABLE_PHRASE,GREEDY_PHRASE
+        SINGLE_WORD(StringCommandReader::read),QUOTABLE_PHRASE(StringCommandReader::readQuotableString),GREEDY_PHRASE(reader->{
+            StringBuilder builder=new StringBuilder(reader.read());
+            while (reader.canRead()){
+                builder.append(" ").append(reader.read());
+            }
+            return builder.toString();
+        });
+        private final Function<StringCommandReader,String> function;
+        StringType(@NotNull Function<StringCommandReader,String> function){
+            this.function=function;
+        }
+        public String read(@NotNull StringCommandReader reader){
+            return this.function.apply(reader);
+        }
     }
 }

@@ -4,7 +4,9 @@ import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.CommandExecutor;
 import io.github.koufu193.core.game.commands.nodes.arguments.ArgumentCommandNode;
 import io.github.koufu193.network.packets.play.ServerboundChatCommandPacket;
+import io.github.koufu193.util.StringCommandReader;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,6 +50,11 @@ public class RootCommandNode extends CommandNode {
         return this;
     }
 
+    @Override
+    public boolean isValidInput(@NotNull StringCommandReader reader) {
+        return true;
+    }
+
 
     @Override
     public RootCommandNode then(ICommandNode node) {
@@ -55,6 +62,9 @@ public class RootCommandNode extends CommandNode {
             throw new IllegalArgumentException("Argument Node cannot be root's child");
         super.then(node);
         return this;
+    }
+    public @Nullable LiteralCommandNode command(@NotNull String command){
+        return (LiteralCommandNode)this.child(command);
     }
 
     public RootCommandNode then(Function<RootCommandNode, ICommandNode> function) {

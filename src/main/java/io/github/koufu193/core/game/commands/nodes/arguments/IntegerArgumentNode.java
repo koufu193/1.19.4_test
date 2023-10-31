@@ -6,6 +6,7 @@ import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.network.data.DataTypes;
+import io.github.koufu193.util.StringCommandReader;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayOutputStream;
@@ -24,9 +25,10 @@ public class IntegerArgumentNode extends ArgumentCommandNode<Integer>{
         this.min=min;
     }
 
+
     @Override
-    public Integer parse(String argument) {
-        return Integer.parseInt(argument);
+    public Integer parse(StringCommandReader reader) {
+        return reader.readInt();
     }
 
     @NotNull

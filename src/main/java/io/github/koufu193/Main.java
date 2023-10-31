@@ -1,5 +1,9 @@
 package io.github.koufu193;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.context.CommandContext;
+import io.github.koufu193.util.StringCommandReader;
+import net.minecraft.commands.CommandListenerWrapper;
 import org.jglrxavpok.hephaistos.mca.*;
 
 import java.io.*;
@@ -7,10 +11,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class Main {
-    public static void main(String[] args) throws IOException, AnvilException {
-        Integer[] a={1,2,3,4,1};
-        Arrays.sort(a, Comparator.comparingInt(Integer::intValue));
-        System.out.println(Arrays.toString(a));
+    public static void main(String[] args) {
+        StringCommandReader reader=new StringCommandReader("hello \" hello\"  ");
+        System.out.println(reader.read(0,3));
     }
 
 }

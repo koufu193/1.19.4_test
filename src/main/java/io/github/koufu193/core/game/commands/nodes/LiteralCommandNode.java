@@ -2,6 +2,8 @@ package io.github.koufu193.core.game.commands.nodes;
 
 import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.CommandExecutor;
+import io.github.koufu193.util.StringCommandReader;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +24,11 @@ public class LiteralCommandNode extends CommandNode{
     @Override
     public String name() {
         return this.literal();
+    }
+
+    @Override
+    public boolean isValidInput(@NotNull StringCommandReader reader) {
+        return this.literal.equals(reader.read());
     }
 
     public LiteralCommandNode then(Function<LiteralCommandNode,ICommandNode> function){

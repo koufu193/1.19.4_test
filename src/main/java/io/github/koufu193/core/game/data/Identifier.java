@@ -1,6 +1,8 @@
 package io.github.koufu193.core.game.data;
 
-public record Identifier(String namespace,String value) {
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
+
+public record Identifier(String namespace, String value) {
     public Identifier {
         if (!namespace.matches("^[a-z0-9.-_]*$")) throw new IllegalArgumentException("Illegal namespace " + namespace);
         if (!namespace.matches("^[a-z0-9.-_/]*$")) throw new IllegalArgumentException("Illegal value " + value);

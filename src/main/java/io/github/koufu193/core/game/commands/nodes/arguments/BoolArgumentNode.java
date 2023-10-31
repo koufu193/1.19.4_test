@@ -4,6 +4,7 @@ import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.CommandExecutor;
 import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.data.Identifier;
+import io.github.koufu193.util.StringCommandReader;
 import org.checkerframework.checker.units.qual.N;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,10 +16,9 @@ public class BoolArgumentNode extends ArgumentCommandNode<Boolean>{
     public BoolArgumentNode(String name, Map<String, ICommandNode> children, ICommandNode redirect, BiConsumer<CommandExecutor, Command> executorConsumer) {
         super(name, children, redirect, executorConsumer);
     }
-
     @Override
-    public Boolean parse(String argument) {
-        return null;
+    public Boolean parse(StringCommandReader reader) {
+        return reader.readBool();
     }
 
     @NotNull
