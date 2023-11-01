@@ -7,13 +7,16 @@ import net.minecraft.commands.CommandListenerWrapper;
 import org.jglrxavpok.hephaistos.mca.*;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Comparator;
 
 public class Main {
     public static void main(String[] args) {
-        StringCommandReader reader=new StringCommandReader("hello \" hello\"  ");
-        System.out.println(reader.read(0,3));
+        StringCommandReader reader=new StringCommandReader("hello \"hello\"");
+        System.out.println(reader.read());
+        System.out.println(reader.read());
+        System.out.println(reader.read());
     }
 
 }

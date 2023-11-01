@@ -5,6 +5,12 @@ import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
 
 public class ClientboundKeepAlivePacket extends AbstractPacket {
+    public ClientboundKeepAlivePacket(){
+        this(0);
+    }
+    public ClientboundKeepAlivePacket(long id){
+        this.fields(id);
+    }
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Long);
@@ -13,8 +19,5 @@ public class ClientboundKeepAlivePacket extends AbstractPacket {
     @Override
     public int packetId() {
         return 0x23;
-    }
-    public ClientboundKeepAlivePacket id(long id){
-        return (ClientboundKeepAlivePacket)this.fields(id);
     }
 }

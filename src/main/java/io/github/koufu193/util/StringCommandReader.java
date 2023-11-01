@@ -1,5 +1,6 @@
 package io.github.koufu193.util;
 
+import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -62,10 +63,14 @@ public final class StringCommandReader {
     }
     public String read(){
         if(!canRead()) throw new ArrayIndexOutOfBoundsException("End of String");
-        char[] string=new char[countCharsToRead()];
-        System.arraycopy(command, offset, string, 0, string.length);
-        offset+=string.length+1;
-        return new String(string);
+        String string=read(offset,offset+countCharsToRead());
+        offset+=string.length()+1;
+        return string;
+    }
+    public String readRemaining(){
+        String string=read(offset,command.length);
+        offset=command.length;
+        return string;
     }
     public int size(){
         return this.command.length;

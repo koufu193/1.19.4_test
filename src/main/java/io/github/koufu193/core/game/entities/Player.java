@@ -8,6 +8,8 @@ import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHan
 import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 
 import io.github.koufu193.core.game.world.World;
+import io.github.koufu193.network.PacketDecoder;
+import io.github.koufu193.network.PacketEncoder;
 import io.github.koufu193.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
@@ -41,7 +43,7 @@ public class Player extends Entity implements IPlayer{
         this.totalExpPoints=(int)nbt.getOrPut("XpTotal",()->NBT.Int(0)).getValue();
         this.expLevel=(int)nbt.getOrPut("XpLevel",()->NBT.Int(0)).getValue();
         this.expProgress=(float)nbt.getOrPut("XpP",()->NBT.Float(0)).getValue();
-        this.packetHandler =new V1194PlayerPacketHandler(this.channel);
+        this.packetHandler =new V1194PlayerPacketHandler(this.channel,new PacketEncoder(),new PacketDecoder());
         this.profile=profile;
     }
 

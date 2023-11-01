@@ -7,6 +7,8 @@ import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.LightData;
+import io.github.koufu193.network.IPackets;
+import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.*;
@@ -18,11 +20,16 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class V1194PlayerPacketHandler implements PlayerPacketHandler{
     private final AsynchronousSocketChannel channel;
-    public V1194PlayerPacketHandler(@NotNull AsynchronousSocketChannel channel){
+    private final PacketEncoder encoder;
+    private final PacketDecoder decoder;
+    public V1194PlayerPacketHandler(@NotNull AsynchronousSocketChannel channel,@NotNull PacketEncoder encoder,@NotNull PacketDecoder decoder){
         this.channel=channel;
+        this.encoder=encoder;
+        this.decoder=decoder;
     }
     @Override
     public void teleport(@NotNull Location location) {
@@ -94,12 +101,38 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler{
         sendPacket(new ClientboundRemovePlayerInfoPacket(ids));
     }
 
-    private void sendPacket(@NotNull AbstractPacket packet){
+    public synchronized void sendPacket(@NotNull AbstractPacket packet){
         try{
-            channel.write(ByteBuffer.wrap(PacketEncoder.getEncoder().encode(packet))).get();
+            channel.write(ByteBuffer.wrap(this.encoder.encode(packet))).get();
         } catch (IOException | ExecutionException | InterruptedException e) {
             reportError(e);
         }
+    }
+
+    @Override
+    public PacketEncoder encoder() {
+        return this.encoder;
+    }
+
+    @Override
+    public PacketDecoder decoder() {
+        return this.decoder;
+    }
+
+    @Override
+    public AbstractPacket read(@NotNull IPackets packets) {
+        try {
+            return this.decoder.decode(this.channel, packets);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            reportError(e);
+            return null;
+        }
+    }
+
+    @Override
+    public void compressionSize(int size) {
+        this.encoder.setCompressionSize(size);
+        this.decoder.setCompressionSize(size);
     }
 
     private void reportError(Throwable throwable){

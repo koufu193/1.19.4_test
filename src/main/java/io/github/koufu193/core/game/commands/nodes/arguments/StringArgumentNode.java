@@ -59,13 +59,7 @@ public class StringArgumentNode extends ArgumentCommandNode<String> {
     }
 
     public enum StringType {
-        SINGLE_WORD(StringCommandReader::read),QUOTABLE_PHRASE(StringCommandReader::readQuotableString),GREEDY_PHRASE(reader->{
-            StringBuilder builder=new StringBuilder(reader.read());
-            while (reader.canRead()){
-                builder.append(" ").append(reader.read());
-            }
-            return builder.toString();
-        });
+        SINGLE_WORD(StringCommandReader::read),QUOTABLE_PHRASE(StringCommandReader::readQuotableString),GREEDY_PHRASE(StringCommandReader::readRemaining);
         private final Function<StringCommandReader,String> function;
         StringType(@NotNull Function<StringCommandReader,String> function){
             this.function=function;

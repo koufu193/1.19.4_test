@@ -7,6 +7,10 @@ import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.LightData;
+import io.github.koufu193.network.IPackets;
+import io.github.koufu193.network.PacketDecoder;
+import io.github.koufu193.network.PacketEncoder;
+import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.ClientboundUpdatePlayerInfoPacket;
 import io.github.koufu193.network.packets.play.channels.IPluginChannel;
 import org.jetbrains.annotations.NotNull;
@@ -31,4 +35,9 @@ public interface PlayerPacketHandler {
     void sendTabList(@NotNull TextComponent header, @NotNull TextComponent footer);
     void sendPlayerInfo(@NotNull ClientboundUpdatePlayerInfoPacket.PlayerActions... actions);
     void removePlayerInfo(@NotNull UUID... ids);
+    void sendPacket(@NotNull AbstractPacket packet);
+    PacketEncoder encoder();
+    PacketDecoder decoder();
+    AbstractPacket read(@NotNull IPackets packets);
+    void compressionSize(int size);
 }

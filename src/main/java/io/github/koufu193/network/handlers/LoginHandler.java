@@ -1,6 +1,7 @@
 package io.github.koufu193.network.handlers;
 
 import io.github.koufu193.core.game.data.GameProfile;
+import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.properties.Properties;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
@@ -24,19 +25,19 @@ public class LoginHandler implements IHandler{
     @Override
     public void handle(@NotNull AsynchronousSocketChannel channel,@NotNull MinecraftServer server) throws IOException, ExecutionException, InterruptedException, TimeoutException {
         ServerboundLoginStartPacket packet = (ServerboundLoginStartPacket) PacketDecoder.getDecoder().decode(channel, LoginPackets.getPackets());
-        startCompress(channel,server.serverProperties().networkCompressionThreshold());
-        channel.write(ByteBuffer.wrap(PacketEncoder.getEncoder().encode(new ClientboundLoginSuccessPacket(packet.toProfile())))).get();
-        loginSuccess(channel,server, packet.toProfile());
+        Player player=server.loadPlayer(packet.toProfile(),channel);
+        startCompress(player,server.serverProperties().networkCompressionThreshold());
+        player.packetHandler().sendPacket(new ClientboundLoginSuccessPacket(packet.toProfile()));
+        loginSuccess(player,server);
     }
-    private void loginSuccess(AsynchronousSocketChannel channel, MinecraftServer server, GameProfile profile) throws IOException, ExecutionException, InterruptedException, TimeoutException {
-        new PlayHandler(server.loadPlayer(profile,channel)).handle(channel,server);
+    private void loginSuccess(@NotNull Player player,@NotNull MinecraftServer server) throws IOException, ExecutionException, InterruptedException, TimeoutException {
+        new PlayHandler(player).handle(player.channel(),server);
     }
     private void loginFailed(AsynchronousSocketChannel channel){
 
     }
-    private void startCompress(AsynchronousSocketChannel channel,int threshold) throws IOException, ExecutionException, InterruptedException {
-        channel.write(ByteBuffer.wrap(PacketEncoder.getEncoder().encode(new ClientboundSetCompressionPacket().fields(threshold)))).get();
-        PacketEncoder.getEncoder().setCompressionSize(threshold);
-        PacketDecoder.getDecoder().setCompressionSize(threshold);
+    private void startCompress(Player player,int threshold) {
+        player.packetHandler().sendPacket(new ClientboundSetCompressionPacket().fields(threshold));
+        player.packetHandler().compressionSize(threshold);
     }
 }

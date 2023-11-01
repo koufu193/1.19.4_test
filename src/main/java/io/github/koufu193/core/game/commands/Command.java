@@ -7,6 +7,7 @@ import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.ArgumentCommandNode;
+import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.util.StringCommandReader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +24,7 @@ public interface Command {
     Command redirect();
 
     String rawCommand();
+
     ICommandNode node();
 
     static Command parse(@NotNull String command, @NotNull ICommandNode root) {
@@ -30,35 +32,41 @@ public interface Command {
     }
 
     static Command parse(@NotNull StringCommandReader reader, @NotNull ICommandNode root) {
-        ICommandNode node = root;
-        ICommandNode redirect = null;
-        int startOffset = reader.offset();
-        Map<String, Object> argsMap = new HashMap<>();
-        List<Object> args = new ArrayList<>();
-        for(ICommandNode n=getValidNode(reader,node);n!=null;n=getValidNode(reader,n)){
-            if (n instanceof LiteralCommandNode)
-                args.add(reader.read());
-            else {
-                Object obj = ((ArgumentCommandNode<?>) n).parse(reader);
-                argsMap.put(n.name(), obj);
-                args.add(obj);
+        try {
+            ICommandNode node = root;
+            ICommandNode redirect = null;
+            int startOffset = reader.offset();
+            Map<String, Object> argsMap = new HashMap<>();
+            List<Object> args = new ArrayList<>();
+            for (ICommandNode n = getValidNode(reader, node); n != null; n = getValidNode(reader, n)) {
+                if (n instanceof LiteralCommandNode) {
+                    args.add(reader.read());
+                } else {
+                    Object obj = ((ArgumentCommandNode<?>) n).parse(reader);
+                    argsMap.put(n.name(), obj);
+                    args.add(obj);
+                }
+                node = n;
+                if (node.redirect() != null && getValidNode(reader, node.redirect()) != null) {
+                    redirect = node.redirect();
+                    break;
+                }
             }
-            node=n;
-            if(node.redirect()!=null&&getValidNode(reader,node.redirect())!=null){
-                redirect=node.redirect();
-                break;
+            if (redirect == null && reader.canRead()) {
+                throw new IllegalStateException(String.format("Invalid command:%s", reader.rawCommand()));
             }
+            if (redirect == null && !node.executable()) {
+                throw new IllegalStateException(String.format("Not executable command:%s", reader.rawCommand()));
+            }
+            return makeCommand(reader.read(startOffset, Math.min(reader.size(), reader.offset())), args, argsMap, (redirect != null) ? parse(reader, redirect) : null, node);
+        }catch (CommandException e){
+            throw e;
+        }catch (Throwable throwable){
+            throw new CommandException(String.format("error:%s<-:%s",reader.read(0, Math.min(reader.size(), reader.offset())),throwable.getMessage()));
         }
-        if (redirect == null && reader.canRead()){
-            throw new IllegalStateException(String.format("Invalid command:%s", reader.rawCommand()));
-        }
-        if(redirect==null&&!node.executable()){
-            throw new IllegalStateException(String.format("Not executable command:%s",reader.rawCommand()));
-        }
-        return makeCommand(reader.read(startOffset, Math.min(reader.size(), reader.offset())),args,argsMap,(redirect!=null)?parse(reader,redirect):null,node);
     }
 
-    private static Command makeCommand(@NotNull String rawCommand, @NotNull List<Object> argsList, @NotNull Map<String, Object> argsMap, @Nullable Command redirect,@NotNull ICommandNode node) {
+    private static Command makeCommand(@NotNull String rawCommand, @NotNull List<Object> argsList, @NotNull Map<String, Object> argsMap, @Nullable Command redirect, @NotNull ICommandNode node) {
         String command = (String) argsList.get(0);
         return new Command() {
             @Override

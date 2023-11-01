@@ -45,6 +45,7 @@ public class PlayPackets implements IPackets {
             reg(ServerboundSetPlayerPositionPacket::new);
             reg(ServerboundChatCommandPacket::new);
             reg(ServerboundSetPlayerRotationPacket::new);
+            reg(ServerboundKeepAlivePacket::new);
         }
 
         private void reg(Supplier<AbstractPacket> supp) {
