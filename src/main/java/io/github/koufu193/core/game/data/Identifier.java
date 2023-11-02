@@ -13,7 +13,7 @@ public class Identifier{
         checkValueOrThrow(value);
         this.namespace=namespace;
         this.value=value;
-        this.identifier=namespace+value;
+        this.identifier=namespace+":"+value;
     }
     public Identifier(@NotNull String identifier){
         String[] splitIdentifier=identifier.split(":",2);
@@ -30,7 +30,7 @@ public class Identifier{
         checkValueOrThrow(value);
         this.namespace=namespace;
         this.value=value;
-        this.identifier=namespace+value;
+        this.identifier=namespace+":"+value;
     }
 
     @Override
