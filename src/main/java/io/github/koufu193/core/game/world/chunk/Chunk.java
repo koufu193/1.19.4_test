@@ -1,12 +1,11 @@
 package io.github.koufu193.core.game.world.chunk;
 
+import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.core.game.world.chunk.block.Block;
 import io.github.koufu193.core.game.world.chunk.block.interfaces.IBlock;
-import io.github.koufu193.core.game.world.material.Material;
-import org.bukkit.block.data.BlockData;
-import org.checkerframework.checker.index.qual.LengthOf;
+import io.github.koufu193.core.game.data.Material;
 import org.jglrxavpok.hephaistos.mca.BlockState;
 import org.jglrxavpok.hephaistos.mca.ChunkColumn;
 
@@ -21,7 +20,8 @@ public class Chunk {
         BlockState data=column.getBlockState(x,y,z);
         Material<?> material=Material.fromId(data.component1());
         if(material==null) return null;
-        return material.convert(new Location(this.world,x,y,z),data);
+        return null;
+        //return material.(new Location(this.world,x,y,z),data);
     }
     public void changeBlock(Block block){
         Location pos=block.location();

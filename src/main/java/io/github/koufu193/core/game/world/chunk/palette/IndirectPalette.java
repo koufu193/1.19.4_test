@@ -1,13 +1,13 @@
 package io.github.koufu193.core.game.world.chunk.palette;
 
-import io.github.koufu193.core.game.world.material.Material;
+import io.github.koufu193.core.game.data.Identifier;
+import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.util.BitStorage;
 import org.jglrxavpok.hephaistos.mca.BlockState;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 public class IndirectPalette implements Palette {
@@ -45,7 +45,7 @@ public class IndirectPalette implements Palette {
         output.write(this.bits);
         output.write(DataTypes.VarInt.encode(this.palette.length));
         for (BlockState p : palette) {
-            output.write(DataTypes.VarInt.encode(Material.fromKey(p.component1())));
+            output.write(DataTypes.VarInt.encode(Material.fromId(p.component1()).blockId()));
         }
         output.write(DataTypes.VarInt.encode(longArrayLength()));
         output.write(data);

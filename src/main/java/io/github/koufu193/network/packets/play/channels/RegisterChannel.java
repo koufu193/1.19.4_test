@@ -13,7 +13,7 @@ public class RegisterChannel implements IPluginChannel{
     private String[] values;
     @Override
     public Identifier channel() {
-        return Identifier.from("minecraft:register");
+        return new Identifier("minecraft:register");
     }
 
     @Override

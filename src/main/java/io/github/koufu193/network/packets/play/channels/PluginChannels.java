@@ -10,8 +10,8 @@ import java.util.function.Supplier;
 
 public final class PluginChannels {
     private static final Map<Identifier, Supplier<IPluginChannel>> channels=new HashMap<>(){{
-        put(Identifier.from("minecraft:brand"),BrandChannel::new);
-        put(Identifier.from("minecraft:register"),RegisterChannel::new);
+        put(new Identifier("minecraft:brand"),BrandChannel::new);
+        put(new Identifier("minecraft:register"),RegisterChannel::new);
     }};
     public static IPluginChannel get(Identifier identifier){
 

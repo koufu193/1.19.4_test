@@ -105,7 +105,7 @@ public class PlayHandler implements IHandler {
 
     private AbstractPacket makeLoginPacket() {
         return new ClientboundLoginPacket().fields(player.entityId(), server.serverProperties().hardcore(), (byte) Player.GameMode.Creative.id(), (byte) (player.previousGameMode() != null ? player.previousGameMode().id() : -1),
-                new Identifier[]{Identifier.from("overworld"), Identifier.from("overworld_caves"), Identifier.from("the_nether"), Identifier.from("the_end")}, registryCodec, Identifier.from("overworld"), Identifier.from("overworld"), (long) 1,
+                new Identifier[]{new Identifier("overworld"), new Identifier("overworld_caves"), new Identifier("the_nether"), new Identifier("the_end")}, registryCodec, new Identifier("overworld"), new Identifier("overworld"), (long) 1,
                 server.serverProperties().maxPlayers(), 3, 5, false, server.gameRules().doImmediateRespawn.value(), false, false, false, null, null);
     }
 }

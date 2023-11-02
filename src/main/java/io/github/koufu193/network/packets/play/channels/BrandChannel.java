@@ -9,7 +9,7 @@ public class BrandChannel implements IPluginChannel{
     private String brand;
     @Override
     public Identifier channel() {
-        return Identifier.from("minecraft:brand");
+        return new Identifier("minecraft:brand");
     }
 
     @Override

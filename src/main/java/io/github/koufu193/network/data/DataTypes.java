@@ -236,7 +236,7 @@ public final class DataTypes {
         @Override
         public Identifier decode(ByteBuffer buffer) {
 
-            return io.github.koufu193.core.game.data.Identifier.from(DataTypes.String.decode(buffer));
+            return new Identifier(DataTypes.String.decode(buffer));
         }
 
         @Override

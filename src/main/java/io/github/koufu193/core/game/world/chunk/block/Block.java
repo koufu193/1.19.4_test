@@ -1,17 +1,18 @@
 package io.github.koufu193.core.game.world.chunk.block;
 
-import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
-import io.github.koufu193.core.game.world.chunk.block.converters.DefaultBlockConverter;
-import io.github.koufu193.core.game.world.chunk.block.converters.IBlockConverter;
+import io.github.koufu193.core.game.data.block.BlockMeta;
+import io.github.koufu193.core.game.world.chunk.block.converters.DefaultBlockMetaConverter;
+import io.github.koufu193.core.game.world.chunk.block.converters.IBlockMetaConverter;
 import io.github.koufu193.core.game.world.chunk.block.interfaces.IBlock;
-import io.github.koufu193.core.game.world.material.Material;
+import io.github.koufu193.core.game.data.Material;
 import org.jglrxavpok.hephaistos.mca.BlockState;
 
 public class Block implements IBlock {
-    private static final IBlockConverter<Block> CONVERTER=new DefaultBlockConverter();
+    private static final IBlockMetaConverter<BlockMeta> CONVERTER=new DefaultBlockMetaConverter();
     protected Location location;
     protected Material<?> type;
+    protected BlockMeta meta;
     @Override
     public Location location() {
         return this.location.clone();
@@ -24,10 +25,10 @@ public class Block implements IBlock {
 
     @Override
     public BlockState convert() {
-        return CONVERTER.convert(this);
+        return CONVERTER.convert(meta());
     }
 
-    public Block(Location location, Material<Block> type){
+    public Block(Location location, Material<?> type){
         this.type=type;
         this.location=location.clone();
     }
@@ -37,5 +38,8 @@ public class Block implements IBlock {
     }
     private void apply(){
         this.location.chunk().changeBlock(this);
+    }
+    public BlockMeta meta(){
+        return this.meta;
     }
 }

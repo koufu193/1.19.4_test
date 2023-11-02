@@ -1,6 +1,7 @@
 package io.github.koufu193.core.game.world.chunk.palette;
 
-import io.github.koufu193.core.game.world.material.Material;
+import io.github.koufu193.core.game.data.Identifier;
+import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.util.BitStorage;
 import org.jglrxavpok.hephaistos.mca.BlockState;
@@ -39,7 +40,7 @@ public class DirectPalette implements Palette {
         int pad = 64 % this.bits;
         int num = 64 / this.bits;
         for (int i = 0; i < states.length; i++) {
-            storage.write(this.bits, Material.fromKey(states[i].component1()));
+            storage.write(this.bits, Material.fromId(states[i].component1()).blockId());
             if ((i + 1) % num == 0) storage.write(pad, 0);
         }
         return storage.byteArray();

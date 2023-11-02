@@ -3,7 +3,6 @@ package io.github.koufu193.core.game.commands.nodes.arguments;
 import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.CommandExecutor;
 import io.github.koufu193.core.game.commands.nodes.ICommandNode;
-import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.util.StringCommandReader;

@@ -1,19 +1,16 @@
 package io.github.koufu193.core.game.world.chunk.palette;
 
-import io.github.koufu193.core.game.world.material.Material;
+import io.github.koufu193.core.game.data.Identifier;
+import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.network.data.DataTypes;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 
 public class SingleValuePalette implements Palette{
     private final int id;
     public SingleValuePalette(String name){
-        this(Material.fromKey(name));
+        this(Material.fromId(name).blockId());
     }
     public SingleValuePalette(int id){
         this.id=id;
