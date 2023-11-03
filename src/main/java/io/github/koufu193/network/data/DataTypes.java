@@ -5,14 +5,18 @@ import com.google.gson.reflect.TypeToken;
 import io.github.koufu193.core.game.data.Angle;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
+import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.component.serializers.TextComponentSerializer;
+import io.github.koufu193.core.game.data.item.ItemMeta;
+import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.world.chunk.LightData;
 import io.github.koufu193.core.properties.Properties;
 import io.github.koufu193.core.properties.Property;
 import io.github.koufu193.network.packets.play.channels.IPluginChannel;
 import io.github.koufu193.network.packets.play.channels.PluginChannels;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jglrxavpok.hephaistos.nbt.*;
 
 import java.io.*;
@@ -549,6 +553,43 @@ public final class DataTypes {
 
         private Property decodeProperty(ByteBuffer buffer) {
             return new Property(DataTypes.String.decode(buffer), DataTypes.String.decode(buffer), DataTypes.Bool.decode(buffer) ? DataTypes.String.decode(buffer) : null);
+        }
+    };
+    public static final DataType<ItemStack> Item= new DataType<>() {
+        @Override
+        public ItemStack decode(ByteBuffer buffer) {
+            if(!DataTypes.Bool.decode(buffer)) return ItemStack.AIR;
+            Material material=Material.fromItemId(DataTypes.VarInt.decode(buffer));
+            int amount=buffer.get();
+            NBT nbt=DataTypes.NBT.decode(buffer);
+            if(nbt instanceof NBTEnd) nbt=NBTCompound.EMPTY;
+            return new ItemStack(material,amount,ItemMeta.defaultItemMeta(material, (NBTCompound) nbt));
+        }
+
+        @Override
+        public byte[] encode(@Nullable ItemStack value) {
+            if(value==null) value=ItemStack.AIR;
+            ByteArrayOutputStream output=new ByteArrayOutputStream(size(value));
+            output.writeBytes(DataTypes.Bool.encode(value.type()!=Material.AIR));
+            if(value.type()==Material.AIR) return output.toByteArray();
+            output.writeBytes(DataTypes.VarInt.encode(value.type().itemId()));
+            output.write(value.amount());
+            NBTCompound nbt=value.itemMeta().toNBT();
+            if(nbt.isEmpty()) output.write(0);
+            else output.writeBytes(DataTypes.NBT.encode(nbt));
+            return output.toByteArray();
+        }
+
+        @Override
+        public int size(@Nullable ItemStack value) {
+            if(value==null) value=ItemStack.AIR;
+            if(value.type()==Material.AIR) return 1;
+            int bytes=1+DataTypes.VarInt.size(value.type().itemId());
+            bytes+=(byte)value.amount();
+            NBTCompound nbt=value.itemMeta().toNBT();;
+            if(nbt.isEmpty()) bytes+=1;
+            else bytes+=DataTypes.NBT.size(nbt);
+            return bytes;
         }
     };
     public abstract static class DataType<T> implements DecodableData<T>, EncodableData<T> {

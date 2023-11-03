@@ -20,10 +20,8 @@ public class KeepAliveHandler{
         new Thread(() -> {
             while (player.channel().isOpen()){
                 try {
-                    player.packetHandler().sendPacket(new ClientboundKeepAlivePacket(10));
+                    player.packetHandler().sendPacketOrThrow(new ClientboundKeepAlivePacket(10));
                     Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }catch (Throwable e){
                     e.printStackTrace();
                     break;

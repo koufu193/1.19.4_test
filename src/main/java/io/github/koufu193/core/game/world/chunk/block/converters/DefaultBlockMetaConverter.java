@@ -12,7 +12,7 @@ public class DefaultBlockMetaConverter implements IBlockMetaConverter<BlockMeta>
 
     @Override
     public BlockMeta convert(BlockState state) {
-        Material<?> material=Material.fromId(state.component1());
+        Material material=Material.fromId(state.component1());
         return () -> material;
     }
 

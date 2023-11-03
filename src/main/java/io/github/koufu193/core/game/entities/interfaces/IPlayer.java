@@ -2,6 +2,7 @@ package io.github.koufu193.core.game.entities.interfaces;
 
 import io.github.koufu193.core.game.commands.CommandExecutor;
 import io.github.koufu193.core.game.data.GameProfile;
+import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHandler;
@@ -29,4 +30,5 @@ public interface IPlayer extends CommandExecutor,IEntity {
     GameProfile profile();
     World world();
     PlayerMovementHandler movementHandler();
+    PlayerInventory inventory();
 }

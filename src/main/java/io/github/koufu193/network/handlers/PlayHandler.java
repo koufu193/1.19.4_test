@@ -7,7 +7,12 @@ import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.IntegerArgumentNode;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
+import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.core.game.data.component.TextComponent;
+import io.github.koufu193.core.game.data.inventory.InventoryView;
+import io.github.koufu193.core.game.data.inventory.PlayerInventory;
+import io.github.koufu193.core.game.data.item.ItemMeta;
+import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.exceptions.CommandException;
@@ -81,6 +86,8 @@ public class PlayHandler implements IHandler {
                         }))
                 )
         );
+        player.inventory().set(PlayerInventory.PlayerArmor.HEAD,new ItemStack(Material.DIAMOND_HELMET,1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
+        player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket(0,new InventoryView(player.inventory(), (byte)0),null));
         player.packetHandler().sendCommandNode(rootNode);
         new KeepAliveHandler(player).handleAsync();
         AbstractPacket pak = null;

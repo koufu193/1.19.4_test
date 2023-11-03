@@ -4,8 +4,6 @@ import com.google.gson.*;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.block.BlockMeta;
 import io.github.koufu193.core.game.world.chunk.block.Block;
-import io.github.koufu193.core.game.world.chunk.block.converters.DefaultBlockMetaConverter;
-import io.github.koufu193.core.game.world.chunk.block.converters.IBlockMetaConverter;
 import io.github.koufu193.core.game.world.chunk.block.interfaces.IBlock;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
@@ -50,16 +48,15 @@ public class MaterialCodeGenerator extends CodeGenerator {
         source.addField().setName("isItem").setType("boolean").setPrivate().setFinal(true);
         source.addField().setName("isBlock").setType("boolean").setPrivate().setFinal(true);
         source.addField().setName("itemId").setType("int").setPrivate().setFinal(true);
-        source.addField().setName("converter").setType("IBlockMetaConverter<meta>").setPrivate().setFinal(true);
     }
 
     void addStaticFields(JavaClassSource source) {
-        source.addField().setName("DEFAULT_CONVERTER").setType("IBlockMetaConverter<BlockMeta>").setLiteralInitializer("new DefaultBlockMetaConverter();").setPrivate().setStatic(true).setFinal(true);
-        source.addField().setName("ids").setType("Map<String,Material<?>>").setLiteralInitializer("new HashMap<>();").setPrivate().setStatic(true).setFinal(true);
+        source.addField().setName("ids").setType("Map<String,Material>").setLiteralInitializer("new HashMap<>();").setPrivate().setStatic(true).setFinal(true);
+        source.addField().setName("items").setType("Material[]").setLiteralInitializer("new Material[1227+1];").setPrivate().setStatic(true).setFinal(true);
     }
 
     void addConstructors(JavaClassSource source) {
-        source.addMethod().setParameters("@NotNull Identifier id,int maxStack,int blockId,int itemId,boolean isBlock,boolean isItem,IBlockMetaConverter<meta> converter").setBody(
+        source.addMethod().setParameters("@NotNull Identifier id,int maxStack,int blockId,int itemId,boolean isBlock,boolean isItem").setBody(
                 """
                 if(maxStack<=0) throw new IllegalArgumentException(String.format("Max Stack(%d) cannot be negative or zero",maxStack));
                 this.id=id;
@@ -68,8 +65,8 @@ public class MaterialCodeGenerator extends CodeGenerator {
                 this.isBlock=isBlock;
                 this.isItem=isItem;
                 this.itemId=itemId;
-                this.converter=converter;
                 ids.put(id.toString(),this);
+                if(isItem) items[itemId]=this;
                 """
         ).setConstructor(true).setPublic();
     }
@@ -81,20 +78,18 @@ public class MaterialCodeGenerator extends CodeGenerator {
         source.addMethod().setName("isItem").setReturnType("boolean").setBody("return this.isItem;").setPublic();
         source.addMethod().setName("isBlock").setReturnType("boolean").setBody("return this.isBlock;").setPublic();
         source.addMethod().setName("itemId").setReturnType("int").setBody("return this.itemId;").setPublic();
-        source.addMethod().setName("convert").setReturnType("meta").setParameters("@NotNull BlockState state").setBody(
-                """
-                if(!isBlock()) throw new IllegalStateException("Not a block");
-                return this.converter.convert(state);
-                """
-        ).setPublic();
     }
 
     void addStaticMethods(JavaClassSource source) {
-        source.addMethod().setName("fromId").setReturnType("Material<?>").setParameters("@NotNull Identifier id").setBody("return fromId(id.toString());").setPublic().setStatic(true);
-        source.addMethod().setName("fromId").setReturnType("Material<?>").setParameters("@NotNull String id").setBody("""
+        source.addMethod().setName("fromId").setReturnType("Material").setParameters("@NotNull Identifier id").setBody("return fromId(id.toString());").setPublic().setStatic(true);
+        source.addMethod().setName("fromId").setReturnType("Material").setParameters("@NotNull String id").setBody("""
                 if(!id.contains(":")) id="minecraft:"+id;
                 return ids.get(id);
                 """).setPublic().setStatic(true);
+        source.addMethod().setName("fromItemId").setReturnType("Material").setParameters("int itemId").setBody("""
+                if(itemId<0||items.length<=itemId) throw new IllegalArgumentException(String.format("itemId must be between %d and %d",0,items.length-1));
+                return items[itemId];
+                """);
     }
 
     void addImports(JavaClassSource source) {
@@ -106,8 +101,6 @@ public class MaterialCodeGenerator extends CodeGenerator {
         source.addImport(BlockMeta.class);
         source.addImport(BlockState.class);
         source.addImport(Identifier.class);
-        source.addImport(IBlockMetaConverter.class);
-        source.addImport(DefaultBlockMetaConverter.class);
     }
     void addMaterials(JavaClassSource source){
         makeData(readItems(),readBlocks()).forEach(value->addMaterial(source,value));
@@ -119,8 +112,8 @@ public class MaterialCodeGenerator extends CodeGenerator {
         int stackSize=isItem?data.item.get("stackSize").getAsInt():data.block.get("stackSize").getAsInt();
         int blockId=isBlock?data.block.get("defaultState").getAsInt():-1;
         int itemId=isItem?data.item.get("id").getAsInt():-1;
-        source.addField().setName(id.toUpperCase()).setType("Material<BlockMeta>").setPublic().setStatic(true).setFinal(true).setLiteralInitializer(
-                String.format("new Material<>(new Identifier(\"%s\"),%d,%d,%d,%s,%s,%s);",id,stackSize,blockId,itemId,isBlock, isItem,!isBlock?"null":"DEFAULT_CONVERTER")
+        source.addField().setName(id.toUpperCase()).setType("Material").setPublic().setStatic(true).setFinal(true).setLiteralInitializer(
+                String.format("new Material(new Identifier(\"%s\"),%d,%d,%d,%s,%s);",id,stackSize,blockId,itemId,isBlock,isItem)
         );
     }
     List<JsonObject> readItems(){

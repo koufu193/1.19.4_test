@@ -11,7 +11,7 @@ import org.jglrxavpok.hephaistos.mca.BlockState;
 public class Block implements IBlock {
     private static final IBlockMetaConverter<BlockMeta> CONVERTER=new DefaultBlockMetaConverter();
     protected Location location;
-    protected Material<?> type;
+    protected Material type;
     protected BlockMeta meta;
     @Override
     public Location location() {
@@ -19,7 +19,7 @@ public class Block implements IBlock {
     }
 
     @Override
-    public Material<?> type() {
+    public Material type() {
         return this.type;
     }
 
@@ -28,11 +28,11 @@ public class Block implements IBlock {
         return CONVERTER.convert(meta());
     }
 
-    public Block(Location location, Material<?> type){
+    public Block(Location location, Material type){
         this.type=type;
         this.location=location.clone();
     }
-    public void type(Material<?> type){
+    public void type(Material type){
         this.type=type;
         apply();
     }

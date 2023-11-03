@@ -18,7 +18,7 @@ public class Chunk {
     }
     public IBlock block(int x,int y,int z){
         BlockState data=column.getBlockState(x,y,z);
-        Material<?> material=Material.fromId(data.component1());
+        Material material=Material.fromId(data.component1());
         if(material==null) return null;
         return null;
         //return material.(new Location(this.world,x,y,z),data);

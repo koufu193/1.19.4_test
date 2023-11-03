@@ -36,6 +36,7 @@ public interface PlayerPacketHandler {
     void sendPlayerInfo(@NotNull ClientboundUpdatePlayerInfoPacket.PlayerActions... actions);
     void removePlayerInfo(@NotNull UUID... ids);
     void sendPacket(@NotNull AbstractPacket packet);
+    void sendPacketOrThrow(@NotNull AbstractPacket packet);
     PacketEncoder encoder();
     PacketDecoder decoder();
     AbstractPacket read(@NotNull IPackets packets);

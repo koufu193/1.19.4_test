@@ -6,6 +6,6 @@ import org.jglrxavpok.hephaistos.mca.BlockState;
 
 public interface IBlock {
     Location location();
-    Material<?> type();
+    Material type();
     BlockState convert();
 }

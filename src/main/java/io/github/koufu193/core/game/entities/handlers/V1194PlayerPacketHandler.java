@@ -103,9 +103,18 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler{
 
     public synchronized void sendPacket(@NotNull AbstractPacket packet){
         try{
+            sendPacketOrThrow(packet);
+        } catch (RuntimeException e) {
+            reportError(e);
+        }
+    }
+
+    @Override
+    public synchronized void sendPacketOrThrow(@NotNull AbstractPacket packet) {
+        try{
             channel.write(ByteBuffer.wrap(this.encoder.encode(packet))).get();
         } catch (IOException | ExecutionException | InterruptedException e) {
-            reportError(e);
+            throw new RuntimeException(e);
         }
     }
 

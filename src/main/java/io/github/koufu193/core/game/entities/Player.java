@@ -2,6 +2,10 @@ package io.github.koufu193.core.game.entities;
 
 import io.github.koufu193.core.game.data.GameProfile;
 import io.github.koufu193.core.game.data.Location;
+import io.github.koufu193.core.game.data.Material;
+import io.github.koufu193.core.game.data.inventory.PlayerInventory;
+import io.github.koufu193.core.game.data.item.ItemMeta;
+import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.handlers.V1194PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHandler;
@@ -11,12 +15,16 @@ import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
 import io.github.koufu193.server.MinecraftServer;
+import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftInventoryPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
+import org.jglrxavpok.hephaistos.nbt.NBTType;
 import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Objects;
 
 public class Player extends Entity implements IPlayer{
@@ -31,6 +39,7 @@ public class Player extends Entity implements IPlayer{
     private GameProfile profile;
     private final PlayerPacketHandler packetHandler;
     private final PlayerMovementHandler movementHandler=new PlayerMovementHandler(this);
+    private final PlayerInventory inventory;
     public Player(MinecraftServer server,AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt,GameProfile profile) {
         super(server,entityId,nbt,server.worldFromDimension(Objects.requireNonNull(nbt.getString("Dimension"))));
         this.channel=channel;
@@ -43,8 +52,24 @@ public class Player extends Entity implements IPlayer{
         this.totalExpPoints=(int)nbt.getOrPut("XpTotal",()->NBT.Int(0)).getValue();
         this.expLevel=(int)nbt.getOrPut("XpLevel",()->NBT.Int(0)).getValue();
         this.expProgress=(float)nbt.getOrPut("XpP",()->NBT.Float(0)).getValue();
-        this.packetHandler =new V1194PlayerPacketHandler(this.channel,new PacketEncoder(),new PacketDecoder());
+        this.packetHandler=new V1194PlayerPacketHandler(this.channel,new PacketEncoder(),new PacketDecoder());
         this.profile=profile;
+        this.inventory=loadInventory(nbt);
+    }
+    private static PlayerInventory loadInventory(MutableNBTCompound nbt){
+        int selectedSlot=(int)nbt.getOrPut("SelectedItemSlot",()->NBT.Int(0)).getValue();
+        PlayerInventory playerInventory=new PlayerInventory();
+        Collection<? extends NBTCompound> inventoryNBT=(Collection<? extends NBTCompound>)nbt.getOrPut("Inventory",()->NBT.List(NBTType.TAG_Compound,new ArrayList<>())).getValue();
+        inventoryNBT.forEach(nbtCompound->{
+            playerInventory.set(nbtCompound.getByte("Slot"),makeItemStack(nbtCompound));
+        });
+        return playerInventory;
+    }
+    private static ItemStack makeItemStack(NBTCompound nbt){
+        NBTCompound compound=Objects.requireNonNullElse(nbt.getCompound("tag"),NBTCompound.EMPTY);
+        Material material=Material.fromId(nbt.getString("id"));
+        byte amount=nbt.getByte("Count");
+        return new ItemStack(material,amount, ItemMeta.defaultItemMeta(material,compound));
     }
 
     @Override
@@ -189,6 +214,11 @@ public class Player extends Entity implements IPlayer{
     @Override
     public PlayerMovementHandler movementHandler() {
         return this.movementHandler;
+    }
+
+    @Override
+    public PlayerInventory inventory() {
+        return this.inventory;
     }
 
     public enum GameMode{
