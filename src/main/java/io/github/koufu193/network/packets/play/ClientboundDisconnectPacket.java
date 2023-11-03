@@ -1,4 +1,4 @@
-package io.github.koufu193.network.packets.login;
+package io.github.koufu193.network.packets.play;
 
 import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.network.PacketFormat;
@@ -20,6 +20,6 @@ public class ClientboundDisconnectPacket extends AbstractPacket {
 
     @Override
     public int packetId() {
-        return 0;
+        return 0x1a;
     }
 }

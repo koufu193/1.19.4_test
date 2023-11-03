@@ -3,6 +3,7 @@ package io.github.koufu193.core.game.entities;
 import io.github.koufu193.core.game.data.GameProfile;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
+import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
@@ -22,6 +23,7 @@ import org.jglrxavpok.hephaistos.nbt.NBTCompound;
 import org.jglrxavpok.hephaistos.nbt.NBTType;
 import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 
+import java.io.IOException;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -219,6 +221,19 @@ public class Player extends Entity implements IPlayer{
     @Override
     public PlayerInventory inventory() {
         return this.inventory;
+    }
+
+    @Override
+    public void kick(@NotNull TextComponent reason) {
+        this.packetHandler.kick(reason);
+        try{
+            channel.close();
+        } catch (IOException ignored) {}
+    }
+
+    @Override
+    public boolean isOnline() {
+        return channel.isOpen();
     }
 
     public enum GameMode{

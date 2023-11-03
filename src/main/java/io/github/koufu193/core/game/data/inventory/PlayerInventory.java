@@ -11,6 +11,7 @@ import java.util.List;
 
 public class PlayerInventory implements Inventory{
     private static final int ITEMS_LENGTH=36;
+    private int selectedSlot;
     private final ItemStack[] items=new ItemStack[ITEMS_LENGTH];
     //head,chest,leg,foot offhand
     private final ItemStack[] extraItems=new ItemStack[5];
@@ -40,6 +41,13 @@ public class PlayerInventory implements Inventory{
         contents.addAll(Arrays.asList(reverseForPacket(items)));
         contents.add(get(PlayerArmor.OFFHAND));
         return contents.toArray(ItemStack[]::new);
+    }
+    public int selectedSlot(){
+        return this.selectedSlot;
+    }
+    public void selectedSlot(int selectedSlot){
+        if(selectedSlot<0||9<=selectedSlot) throw new IllegalArgumentException(String.format("selectedSlot must be between %d and %d",0,8));
+        this.selectedSlot=selectedSlot;
     }
 
     public ItemStack get(@NotNull PlayerArmor armor){

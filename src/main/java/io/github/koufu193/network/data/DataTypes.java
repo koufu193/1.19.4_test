@@ -507,15 +507,12 @@ public final class DataTypes {
 
         @Override
         public byte[] encode(TextComponent value) {
-            return encode(gson.toJson(value));
+            return DataTypes.String.encode(gson.toJson(value));
         }
 
         @Override
         public int size(TextComponent value) {
             return DataTypes.String.size(gson.toJson(value));
-        }
-        public byte[] encode(String text){
-            return DataTypes.String.encode(text);
         }
     };
     public static final DataType<Properties> Properties= new DataTypes.DataType<>() {

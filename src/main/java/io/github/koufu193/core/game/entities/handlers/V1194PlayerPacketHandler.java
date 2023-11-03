@@ -57,6 +57,11 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler{
     }
 
     @Override
+    public void kick(@NotNull TextComponent reason) {
+        sendPacket(new ClientboundDisconnectPacket(reason));
+    }
+
+    @Override
     public void sendChunk(@NotNull Chunk chunk) {
         sendPacket(new ClientboundChunkDataAndUpdateLightPacket(chunk));
     }

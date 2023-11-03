@@ -1,13 +1,16 @@
 package io.github.koufu193.network.handlers;
 
 
+import com.google.gson.GsonBuilder;
 import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.IntegerArgumentNode;
+import io.github.koufu193.core.game.commands.nodes.arguments.StringArgumentNode;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
+import io.github.koufu193.core.game.data.component.ChatColor;
 import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
@@ -66,7 +69,6 @@ public class PlayHandler implements IHandler {
         }*/
         player.packetHandler().sendChunk(world.chunk(0, 0));
         player.teleport(player.location().y(256).x(5).z(5));
-        AtomicBoolean bool = new AtomicBoolean(true);
         RootCommandNode rootNode = (
                 RootCommandNode.root().then(
                         LiteralCommandNode.literal("ktp").then(
@@ -81,17 +83,21 @@ public class PlayHandler implements IHandler {
                                 )
                         )
                 ).then(
-                        LiteralCommandNode.literal("stop").execute(((executor, command) -> {
-                            bool.set(false);
-                        }))
+                        LiteralCommandNode.literal("kickme").then(
+                                StringArgumentNode.quotableString("color").then(
+                                        StringArgumentNode.greedyString("text").execute((executor, command) -> {
+                                            player.kick(new TextComponent((String)command.args("text"),ChatColor.byString((String)command.args("color"))));
+                                        })
+                                )
+                        )
                 )
         );
-        player.inventory().set(PlayerInventory.PlayerArmor.HEAD,new ItemStack(Material.DIAMOND_HELMET,1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
-        player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket(0,new InventoryView(player.inventory(), (byte)0),null));
+        player.inventory().set(PlayerInventory.PlayerArmor.HEAD, new ItemStack(Material.DIAMOND_HELMET, 1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
+        player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket(0, new InventoryView(player.inventory(), (byte) 0), null));
         player.packetHandler().sendCommandNode(rootNode);
         new KeepAliveHandler(player).handleAsync();
         AbstractPacket pak = null;
-        while ((pak = player.packetHandler().read(PlayPackets.getPackets())) != null && bool.get()) {
+        while ((pak = player.packetHandler().read(PlayPackets.getPackets())) != null && player.isOnline()) {
             if (pak instanceof ServerboundMovementPacket packet) {
                 if (!(pak instanceof ServerboundSetPlayerRotationPacket)) {
                     player.location(((ServerboundMovementPacket) pak).toLocation(player.location()));
@@ -105,7 +111,7 @@ public class PlayHandler implements IHandler {
                 }
             }
         }
-        while (bool.get()) {
+        while (player.isOnline()) {
         }
         channel.close();
     }

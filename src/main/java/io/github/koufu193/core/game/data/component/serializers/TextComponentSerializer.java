@@ -1,6 +1,8 @@
 package io.github.koufu193.core.game.data.component.serializers;
 
 import com.google.gson.*;
+import com.google.gson.annotations.JsonAdapter;
+import io.github.koufu193.core.game.data.component.BaseComponent;
 import io.github.koufu193.core.game.data.component.TextComponent;
 
 import java.lang.reflect.Type;
@@ -10,9 +12,9 @@ public class TextComponentSerializer extends BaseComponentSerializer implements 
     public TextComponent deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject object=json.getAsJsonObject();
         if(!object.has("text")) throw new JsonParseException("Couldn't find 'text' property");
-        TextComponent component=new TextComponent(object.get("text").getAsString());
-        super.deserialize(object,component,context);
-        return component;
+        TextComponent.Builder builder=new TextComponent(object.get("text").getAsString()).builder();
+        super.deserialize(object,builder,context);
+        return builder.build();
     }
 
     @Override

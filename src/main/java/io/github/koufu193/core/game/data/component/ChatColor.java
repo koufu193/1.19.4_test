@@ -4,8 +4,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class ChatColor{
+    private static final Map<Character,ChatColor> BY_CHAR=new HashMap<>();
+    private static final Map<String,ChatColor> BY_NAME=new HashMap<>();
     private static final String PREFIX="§";
     public static final ChatColor BLACK = new ChatColor( '0', "black" );
     public static final ChatColor DARK_BLUE = new ChatColor( '1', "dark_blue" );
@@ -31,8 +34,6 @@ public final class ChatColor{
     public static final ChatColor RESET = new ChatColor( 'r', "reset" );
     private final String code;
     private final String name;
-    private static final Map<Character,ChatColor> BY_CHAR=new HashMap<>();
-    private static final Map<String,ChatColor> BY_NAME=new HashMap<>();
     public ChatColor(@NotNull String code){
         this(code,null);
     }
@@ -56,6 +57,9 @@ public final class ChatColor{
         BY_CHAR.put(c,this);
         BY_NAME.put(name,this);
     }
+    public String toColorString(){
+        return Objects.requireNonNullElse(name,code);
+    }
     @Override
     public String toString() {
         return code;
@@ -63,7 +67,10 @@ public final class ChatColor{
     public static ChatColor byChar(char c){
         return BY_CHAR.get(c);
     }
-    public static ChatColor byString(String name){
-        return BY_NAME.get(name);
+    public static ChatColor byString(@NotNull String name){
+        ChatColor color=BY_NAME.get(name);
+        if(color!=null) return color;
+        if(!name.matches("^#[\\da-fA-F]{6}$")) return null;
+        return new ChatColor(Integer.parseInt(name.substring(1),16));
     }
 }

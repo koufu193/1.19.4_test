@@ -57,6 +57,15 @@ public class StringArgumentNode extends ArgumentCommandNode<String> {
     public static StringArgumentNode string(@NotNull String name, @NotNull StringType type){
         return new StringArgumentNode(name,type,new HashMap<>(),null,null);
     }
+    public static StringArgumentNode singleWord(@NotNull String name){
+        return string(name,StringType.SINGLE_WORD);
+    }
+    public static StringArgumentNode quotableString(@NotNull String name){
+        return string(name,StringType.QUOTABLE_PHRASE);
+    }
+    public static StringArgumentNode greedyString(@NotNull String name){
+        return string(name,StringType.GREEDY_PHRASE);
+    }
 
     public enum StringType {
         SINGLE_WORD(StringCommandReader::read),QUOTABLE_PHRASE(StringCommandReader::readQuotableString),GREEDY_PHRASE(StringCommandReader::readRemaining);

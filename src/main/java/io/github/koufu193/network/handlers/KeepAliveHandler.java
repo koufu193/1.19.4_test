@@ -18,7 +18,7 @@ public class KeepAliveHandler{
     }
     public void handleAsync() {
         new Thread(() -> {
-            while (player.channel().isOpen()){
+            while (player.isOnline()){
                 try {
                     player.packetHandler().sendPacketOrThrow(new ClientboundKeepAlivePacket(10));
                     Thread.sleep(1000);

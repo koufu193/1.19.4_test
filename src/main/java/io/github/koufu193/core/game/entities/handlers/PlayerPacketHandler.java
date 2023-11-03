@@ -35,6 +35,7 @@ public interface PlayerPacketHandler {
     void sendTabList(@NotNull TextComponent header, @NotNull TextComponent footer);
     void sendPlayerInfo(@NotNull ClientboundUpdatePlayerInfoPacket.PlayerActions... actions);
     void removePlayerInfo(@NotNull UUID... ids);
+    void kick(@NotNull TextComponent reason);
     void sendPacket(@NotNull AbstractPacket packet);
     void sendPacketOrThrow(@NotNull AbstractPacket packet);
     PacketEncoder encoder();

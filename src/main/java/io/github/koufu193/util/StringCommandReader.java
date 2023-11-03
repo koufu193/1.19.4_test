@@ -53,9 +53,10 @@ public final class StringCommandReader {
         return new String(Arrays.copyOfRange(command,startOffset,endOffset));
     }
     public String readQuotableString(){
-        StringBuilder string= new StringBuilder(read());
-        if(!string.toString().startsWith("\"")) return string.toString();
         String str=read();
+        if(!str.startsWith("\"")||str.matches("^\".*\"$")) return str.replaceAll("(^\")|(\"$)","");
+        StringBuilder string= new StringBuilder(str);
+        str=read();
         for(;!str.endsWith("\"");str=read()){
             string.append(" ").append(str);
         }

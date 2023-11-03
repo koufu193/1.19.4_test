@@ -32,6 +32,7 @@ public class PlayPackets implements IPackets {
             reg(ClientboundRemovePlayerInfoPacket::new);
             reg(ClientboundSetContainerContentsPacket::new);
             reg(ClientboundSetContainerSlotPacket::new);
+            reg(ClientboundDisconnectPacket::new);
         }
 
         private void reg(Supplier<AbstractPacket> supp) {
