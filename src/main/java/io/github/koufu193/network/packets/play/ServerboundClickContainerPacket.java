@@ -104,7 +104,7 @@ public class ServerboundClickContainerPacket extends InventoryPacket{
         DragType type=null;
         if(button<3) type=lefts[button];
         else if(button<7) type=middles[button-4];
-        else type=middles[button-8];
+        else type=rights[button-8];
         if(!type.isAddSlot()&&slot!=-999) return DragType.UNKNOWN;
         return type;
     }
