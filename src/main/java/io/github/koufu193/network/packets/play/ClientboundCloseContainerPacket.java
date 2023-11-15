@@ -4,11 +4,10 @@ import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
 
-public class ClientboundSetHeldSlotPacket extends InventoryPacket {
-    ClientboundSetHeldSlotPacket(){}
-    public ClientboundSetHeldSlotPacket(byte slot){
-        if(slot<0||9<=slot) throw new IllegalArgumentException(String.format("heldSlot must be between %d and %d",0,8));
-        this.fields(slot);
+public class ClientboundCloseContainerPacket extends InventoryPacket {
+    ClientboundCloseContainerPacket(){}
+    public ClientboundCloseContainerPacket(byte windowId){
+        this.fields(windowId);
     }
     @Override
     public PacketFormat format() {
@@ -17,6 +16,6 @@ public class ClientboundSetHeldSlotPacket extends InventoryPacket {
 
     @Override
     public int packetId() {
-        return 0x4d;
+        return 0x11;
     }
 }

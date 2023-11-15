@@ -1,7 +1,6 @@
 package io.github.koufu193.network.handlers;
 
 
-import com.google.gson.GsonBuilder;
 import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
@@ -17,9 +16,11 @@ import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.network.data.DataTypes;
+import io.github.koufu193.network.handlers.play.KeepAliveHandler;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.*;
 import io.github.koufu193.network.packets.play.channels.BrandChannel;
@@ -31,7 +32,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PlayHandler implements IHandler {
     private final Player player;
@@ -85,15 +85,22 @@ public class PlayHandler implements IHandler {
                 ).then(
                         LiteralCommandNode.literal("kickme").then(
                                 StringArgumentNode.quotableString("color").then(
-                                        StringArgumentNode.greedyString("text").execute((executor, command) -> {
+                                        StringArgumentNode.quotableString("text").execute((executor, command) -> {
                                             player.kick(new TextComponent((String)command.args("text"),ChatColor.byString((String)command.args("color"))));
                                         })
                                 )
                         )
+                ).then(
+                        LiteralCommandNode.literal("held").then(
+                                IntegerArgumentNode.integer("id",0,8).execute(((executor, command) ->{
+                                    int value=(Integer)command.args("id");
+                                    ((IPlayer)executor).packetHandler().sendPacket(new ClientboundSetHeldSlotPacket((byte) value));
+                                }))
+                        )
                 )
         );
         player.inventory().set(PlayerInventory.PlayerArmor.HEAD, new ItemStack(Material.DIAMOND_HELMET, 1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
-        player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket(0, new InventoryView(player.inventory(), (byte) 0), null));
+        player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket((byte) 0,0, new InventoryView(player.inventory()), null));
         player.packetHandler().sendCommandNode(rootNode);
         new KeepAliveHandler(player).handleAsync();
         AbstractPacket pak = null;
@@ -105,10 +112,12 @@ public class PlayHandler implements IHandler {
             } else if (pak instanceof ServerboundChatCommandPacket packet) {
                 try {
                     Command command = Command.parse(packet.command(), rootNode);
-                    command.node().execute(player, command);
+                    command.execute(player);
                 } catch (CommandException e) {
                     player.packetHandler().sendSystemMessage(e.messageComponent());
                 }
+            }else if(pak instanceof ServerboundClickContainerPacket a){
+                System.out.println(a.carriedItem().type());
             }
         }
         while (player.isOnline()) {
@@ -117,7 +126,7 @@ public class PlayHandler implements IHandler {
     }
 
     private AbstractPacket makeLoginPacket() {
-        return new ClientboundLoginPacket().fields(player.entityId(), server.serverProperties().hardcore(), (byte) Player.GameMode.Creative.id(), (byte) (player.previousGameMode() != null ? player.previousGameMode().id() : -1),
+        return new ClientboundLoginPacket().fields(player.entityId(), server.serverProperties().hardcore(), (byte) Player.GameMode.Survival.id(), (byte) (player.previousGameMode() != null ? player.previousGameMode().id() : -1),
                 new Identifier[]{new Identifier("overworld"), new Identifier("overworld_caves"), new Identifier("the_nether"), new Identifier("the_end")}, registryCodec, new Identifier("overworld"), new Identifier("overworld"), (long) 1,
                 server.serverProperties().maxPlayers(), 3, 5, false, server.gameRules().doImmediateRespawn.value(), false, false, false, null, null);
     }

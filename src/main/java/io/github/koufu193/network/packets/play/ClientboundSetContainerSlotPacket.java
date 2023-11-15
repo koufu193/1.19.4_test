@@ -8,7 +8,7 @@ import io.github.koufu193.network.packets.AbstractPacket;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
-public class ClientboundSetContainerSlotPacket extends AbstractPacket {
+public class ClientboundSetContainerSlotPacket extends InventoryPacket {
     ClientboundSetContainerSlotPacket(){}
     public ClientboundSetContainerSlotPacket(byte windowId, int stateId, short slot, @Nullable ItemStack item){
         if(item==null) item=ItemStack.AIR;

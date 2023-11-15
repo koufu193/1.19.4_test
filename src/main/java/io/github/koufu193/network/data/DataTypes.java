@@ -556,7 +556,9 @@ public final class DataTypes {
         @Override
         public ItemStack decode(ByteBuffer buffer) {
             if(!DataTypes.Bool.decode(buffer)) return ItemStack.AIR;
-            Material material=Material.fromItemId(DataTypes.VarInt.decode(buffer));
+            int itemId=DataTypes.VarInt.decode(buffer);
+            if(itemId==-1) return null;
+            Material material=Material.fromItemId(itemId);
             int amount=buffer.get();
             NBT nbt=DataTypes.NBT.decode(buffer);
             if(nbt instanceof NBTEnd) nbt=NBTCompound.EMPTY;

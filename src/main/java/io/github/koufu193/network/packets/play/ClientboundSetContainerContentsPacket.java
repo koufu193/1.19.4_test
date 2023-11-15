@@ -8,11 +8,11 @@ import io.github.koufu193.network.packets.AbstractPacket;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ClientboundSetContainerContentsPacket extends AbstractPacket {
+public class ClientboundSetContainerContentsPacket extends InventoryPacket {
     ClientboundSetContainerContentsPacket(){}
-    public ClientboundSetContainerContentsPacket(int stateId,@NotNull InventoryView view, @Nullable ItemStack playerHeldItem){
+    public ClientboundSetContainerContentsPacket(byte windowId,int stateId,@NotNull InventoryView view, @Nullable ItemStack playerHeldItem){
         if(playerHeldItem==null) playerHeldItem=ItemStack.AIR;
-        fields(view.windowId(),stateId,view.inventory().getAllContents(),playerHeldItem);
+        fields(windowId,stateId,view.inventory().getAllContents(),playerHeldItem);
     }
     @Override
     public PacketFormat format() {

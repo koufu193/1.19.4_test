@@ -7,6 +7,7 @@ import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.ArgumentCommandNode;
+import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.util.StringCommandReader;
 import org.jetbrains.annotations.NotNull;
@@ -19,13 +20,14 @@ public interface Command {
 
     Object args(int index);
 
-    Object args(String name);
+    Object args(@NotNull String name);
 
     Command redirect();
 
     String rawCommand();
 
     ICommandNode node();
+    void execute(@NotNull CommandExecutor executor);
 
     static Command parse(@NotNull String command, @NotNull ICommandNode root) {
         return parse(new StringCommandReader(command), root);
@@ -80,7 +82,7 @@ public interface Command {
             }
 
             @Override
-            public Object args(String name) {
+            public Object args(@NotNull String name) {
                 return argsMap.get(name);
             }
 
@@ -97,6 +99,11 @@ public interface Command {
             @Override
             public ICommandNode node() {
                 return node;
+            }
+
+            @Override
+            public void execute(@NotNull CommandExecutor executor) {
+                this.node().execute(executor,this);
             }
         };
     }

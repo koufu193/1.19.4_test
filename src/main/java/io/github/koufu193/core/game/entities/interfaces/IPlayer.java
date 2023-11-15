@@ -35,4 +35,5 @@ public interface IPlayer extends CommandExecutor,IEntity {
     PlayerInventory inventory();
     void kick(@NotNull TextComponent reason);
     boolean isOnline();
+
 }

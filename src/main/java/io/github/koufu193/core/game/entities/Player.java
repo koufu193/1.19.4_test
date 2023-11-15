@@ -4,9 +4,11 @@ import io.github.koufu193.core.game.data.GameProfile;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.core.game.data.component.TextComponent;
+import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
+import io.github.koufu193.core.game.entities.handlers.InventoryHandler;
 import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.handlers.V1194PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHandler;
@@ -42,6 +44,7 @@ public class Player extends Entity implements IPlayer{
     private final PlayerPacketHandler packetHandler;
     private final PlayerMovementHandler movementHandler=new PlayerMovementHandler(this);
     private final PlayerInventory inventory;
+    private final InventoryHandler inventoryHandler;
     public Player(MinecraftServer server,AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt,GameProfile profile) {
         super(server,entityId,nbt,server.worldFromDimension(Objects.requireNonNull(nbt.getString("Dimension"))));
         this.channel=channel;
@@ -57,6 +60,7 @@ public class Player extends Entity implements IPlayer{
         this.packetHandler=new V1194PlayerPacketHandler(this.channel,new PacketEncoder(),new PacketDecoder());
         this.profile=profile;
         this.inventory=loadInventory(nbt);
+        this.inventoryHandler=new InventoryHandler(this);
     }
     private static PlayerInventory loadInventory(MutableNBTCompound nbt){
         int selectedSlot=(int)nbt.getOrPut("SelectedItemSlot",()->NBT.Int(0)).getValue();

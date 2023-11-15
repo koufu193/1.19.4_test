@@ -53,14 +53,11 @@ public final class StringCommandReader {
         return new String(Arrays.copyOfRange(command,startOffset,endOffset));
     }
     public String readQuotableString(){
-        String str=read();
-        if(!str.startsWith("\"")||str.matches("^\".*\"$")) return str.replaceAll("(^\")|(\"$)","");
-        StringBuilder string= new StringBuilder(str);
-        str=read();
-        for(;!str.endsWith("\"");str=read()){
-            string.append(" ").append(str);
-        }
-        return string.append(" ").append(str).toString().replaceAll("(^\")|(\"$)","");
+        int size=countQuotableCharsToRead();
+        String str=read(offset,offset+size);
+        offset+=str.length()+1;
+        if(!str.startsWith("\"")) return str;
+        return str.replaceAll("(^\")|(\"$)","").replaceAll("\\\\([\"\\\\])","\\1");
     }
     public String read(){
         if(!canRead()) throw new ArrayIndexOutOfBoundsException("End of String");
@@ -82,5 +79,21 @@ public final class StringCommandReader {
             if(Character.isWhitespace(command[offset+len])) return len;
         }
         return len;
+    }
+    private int countQuotableCharsToRead(){
+        if(command[offset]!='"') return countCharsToRead();
+        int len=1;
+        for(;offset+len<command.length;len++){
+            if(command[offset+len]=='\\'){
+                if(command[offset+len+1]=='"'||command[offset+len+1]=='\\'){
+                    offset++;
+                    continue;
+                }
+                else throw new IllegalStateException("Invalid char:"+command[offset+len+1]);
+            }
+            if(command[offset+len]!='"') continue;
+            if(command.length<=offset+len+1||Character.isWhitespace(command[offset+len+1])) return len+1;
+        }
+        return len+1;
     }
 }

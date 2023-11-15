@@ -1,4 +1,4 @@
-package io.github.koufu193.network.handlers;
+package io.github.koufu193.network.handlers.play;
 
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.entities.interfaces.IPlayer;

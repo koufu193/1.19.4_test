@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface Inventory {
+    InventoryType type();
     @NotNull
     ItemStack get(int slotId);
     ItemStack[] getAllContents();

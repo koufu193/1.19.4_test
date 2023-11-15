@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PlayerInventory implements Inventory{
+    public static final byte WINDOW_ID=0;
     private static final int ITEMS_LENGTH=36;
     private int selectedSlot;
     private final ItemStack[] items=new ItemStack[ITEMS_LENGTH];
@@ -21,6 +22,11 @@ public class PlayerInventory implements Inventory{
         Arrays.fill(items,ItemStack.AIR);
         Arrays.fill(extraItems,ItemStack.AIR);
         Arrays.fill(craftingInput,ItemStack.AIR);
+    }
+
+    @Override
+    public InventoryType type() {
+        return InventoryType.PLAYER;
     }
 
     @NotNull

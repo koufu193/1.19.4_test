@@ -33,6 +33,9 @@ public class PlayPackets implements IPackets {
             reg(ClientboundSetContainerContentsPacket::new);
             reg(ClientboundSetContainerSlotPacket::new);
             reg(ClientboundDisconnectPacket::new);
+            reg(ClientboundOpenScreenPacket::new);
+            reg(ClientboundOpenHorseScreenPacket::new);
+            reg(ClientboundCloseContainerPacket::new);
         }
 
         private void reg(Supplier<AbstractPacket> supp) {
@@ -49,6 +52,10 @@ public class PlayPackets implements IPackets {
             reg(ServerboundChatCommandPacket::new);
             reg(ServerboundSetPlayerRotationPacket::new);
             reg(ServerboundKeepAlivePacket::new);
+            reg(ServerboundSetHeldItemPacket::new);
+            reg(ServerboundSetCreativeModeSlotPacket::new);
+            reg(ServerboundCloseContainerPacket::new);
+            reg(ServerboundClickContainerPacket::new);
         }
 
         private void reg(Supplier<AbstractPacket> supp) {

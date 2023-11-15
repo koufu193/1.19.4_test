@@ -4,6 +4,9 @@ import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.data.Difficulty;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.component.TextComponent;
+import io.github.koufu193.core.game.data.inventory.HorseInventory;
+import io.github.koufu193.core.game.data.inventory.InventoryView;
+import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.LightData;
@@ -14,6 +17,7 @@ import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.*;
 import io.github.koufu193.network.packets.play.channels.IPluginChannel;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -147,6 +151,17 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler{
     public void compressionSize(int size) {
         this.encoder.setCompressionSize(size);
         this.decoder.setCompressionSize(size);
+    }
+
+    @Override
+    public void openInventory(byte windowId,@NotNull InventoryView view) {
+        if(view.inventory() instanceof HorseInventory horse) sendPacket(new ClientboundOpenHorseScreenPacket(windowId,horse));
+        else sendPacket(new ClientboundOpenScreenPacket(windowId,view));
+    }
+
+    @Override
+    public void sendContainerContents(byte windowId, byte stateId, @NotNull InventoryView view, @Nullable ItemStack playerHeldItem) {
+        sendPacket(new ClientboundSetContainerContentsPacket(windowId,stateId,view,playerHeldItem));
     }
 
     private void reportError(Throwable throwable){

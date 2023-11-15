@@ -4,6 +4,9 @@ import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.data.Difficulty;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.component.TextComponent;
+import io.github.koufu193.core.game.data.inventory.Inventory;
+import io.github.koufu193.core.game.data.inventory.InventoryView;
+import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.LightData;
@@ -14,6 +17,7 @@ import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.ClientboundUpdatePlayerInfoPacket;
 import io.github.koufu193.network.packets.play.channels.IPluginChannel;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -42,4 +46,6 @@ public interface PlayerPacketHandler {
     PacketDecoder decoder();
     AbstractPacket read(@NotNull IPackets packets);
     void compressionSize(int size);
+    void openInventory(byte windowId,@NotNull InventoryView view);
+    void sendContainerContents(byte windowId, byte stateId, @NotNull InventoryView view, @Nullable ItemStack playerHeldItem);
 }

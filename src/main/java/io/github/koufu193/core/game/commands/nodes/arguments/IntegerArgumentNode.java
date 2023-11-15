@@ -4,6 +4,7 @@ import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.CommandExecutor;
 import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.data.Identifier;
+import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.util.StringCommandReader;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +28,9 @@ public class IntegerArgumentNode extends ArgumentCommandNode<Integer>{
 
     @Override
     public Integer parse(StringCommandReader reader) {
-        return reader.readInt();
+        int value=reader.readInt();
+        if(value<this.min||this.max<value) throw new CommandException(String.format("value must be between %d and %d:actual %d",this.min,this.max,value));
+        return value;
     }
 
     @NotNull
