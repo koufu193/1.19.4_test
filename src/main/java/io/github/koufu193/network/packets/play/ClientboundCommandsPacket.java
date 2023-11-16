@@ -1,11 +1,10 @@
 package io.github.koufu193.network.packets.play;
 
-import io.github.koufu193.core.game.commands.ids.V1194ParserIds;
+import io.github.koufu193.core.game.parser.v1194.V1194CommandArgumentIdParser;
 import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.ArgumentCommandNode;
-import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
@@ -43,7 +42,7 @@ public class ClientboundCommandsPacket extends AbstractPacket {
                     if(node.redirect()!=null) output.writeBytes(DataTypes.VarInt.encode(ids.get(node.redirect())));
                     if(!(node instanceof RootCommandNode)) output.writeBytes(DataTypes.String.encode(node.name()));
                     if(node instanceof ArgumentCommandNode<?> argumentNode){
-                        output.writeBytes(DataTypes.VarInt.encode(V1194ParserIds.instance().getId(argumentNode.parserId())));
+                        output.writeBytes(DataTypes.VarInt.encode(V1194CommandArgumentIdParser.getParser().parse(argumentNode.parserId())));
                         output.writeBytes(argumentNode.properties());
                         if(argumentNode.suggestionType()!=null) output.writeBytes(DataTypes.Identifier.encode(argumentNode.suggestionType()));
                     }

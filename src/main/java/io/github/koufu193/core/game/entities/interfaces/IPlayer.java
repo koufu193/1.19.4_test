@@ -3,6 +3,7 @@ package io.github.koufu193.core.game.entities.interfaces;
 import io.github.koufu193.core.game.commands.CommandExecutor;
 import io.github.koufu193.core.game.data.GameProfile;
 import io.github.koufu193.core.game.data.component.TextComponent;
+import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
@@ -35,5 +36,13 @@ public interface IPlayer extends CommandExecutor,IEntity {
     PlayerInventory inventory();
     void kick(@NotNull TextComponent reason);
     boolean isOnline();
+    void openInventory(@NotNull InventoryView view);
+    void closeInventory();
+    enum MainHand{
+        Left,Right
+    }
+    enum ChatMode{
+        Enabled,OnlyCommands,Hidden
+    }
 
 }

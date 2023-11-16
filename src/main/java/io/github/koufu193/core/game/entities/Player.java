@@ -10,7 +10,7 @@ import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.handlers.InventoryHandler;
 import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
-import io.github.koufu193.core.game.entities.handlers.V1194PlayerPacketHandler;
+import io.github.koufu193.core.game.entities.handlers.v1194.V1194PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHandler;
 import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 
@@ -18,7 +18,7 @@ import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
 import io.github.koufu193.server.MinecraftServer;
-import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftInventoryPlayer;
+import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
@@ -41,6 +41,7 @@ public class Player extends Entity implements IPlayer{
     protected int expLevel;
     protected float expProgress;
     private GameProfile profile;
+    private InventoryView openingView;
     private final PlayerPacketHandler packetHandler;
     private final PlayerMovementHandler movementHandler=new PlayerMovementHandler(this);
     private final PlayerInventory inventory;
@@ -240,6 +241,20 @@ public class Player extends Entity implements IPlayer{
         return channel.isOpen();
     }
 
+    @Override
+    public void openInventory(@NotNull InventoryView view) {
+        if(this.openingView!=null) closeInventory();
+        this.inventoryHandler.open(view);
+        this.openingView=view;
+    }
+
+    @Override
+    public void closeInventory() {
+        if(this.openingView==null) return;
+        this.inventoryHandler.close(this.openingView);
+        this.openingView=null;
+    }
+
     public enum GameMode{
         Survival(0),Creative(1),Adventure(2),Spectator(3);
         private final int id;
@@ -367,11 +382,5 @@ public class Player extends Entity implements IPlayer{
 
     public record Property(String lang, byte viewDistance, ChatMode chatMode, boolean chatColors, byte display, MainHand mainHand, boolean filtering, boolean showList){
 
-    }
-    public enum MainHand{
-        Left,Right
-    }
-    public enum ChatMode{
-        Enabled,OnlyCommands,Hidden
     }
 }

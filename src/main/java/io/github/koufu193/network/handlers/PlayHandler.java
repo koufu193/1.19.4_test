@@ -11,8 +11,7 @@ import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.core.game.data.component.ChatColor;
 import io.github.koufu193.core.game.data.component.TextComponent;
-import io.github.koufu193.core.game.data.inventory.InventoryView;
-import io.github.koufu193.core.game.data.inventory.PlayerInventory;
+import io.github.koufu193.core.game.data.inventory.*;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
@@ -97,6 +96,15 @@ public class PlayHandler implements IHandler {
                                     ((IPlayer)executor).packetHandler().sendPacket(new ClientboundSetHeldSlotPacket((byte) value));
                                 }))
                         )
+                ).then(
+                        LiteralCommandNode.literal("open").execute(((executor, command) ->{
+                            IPlayer player1=(IPlayer) executor;
+                            Inventory inventory=new GenericInventory(9);
+                            for(int i=0;i<9;i++){
+                                inventory.set(i,new ItemStack(Material.ACACIA_LOG, (int) (Math.random()*10+1),ItemMeta.defaultItemMeta(Material.ACACIA_BOAT)));
+                            }
+                            player1.openInventory(new InventoryView(inventory,new TextComponent("hello")));
+                        }))
                 )
         );
         player.inventory().set(PlayerInventory.PlayerArmor.HEAD, new ItemStack(Material.DIAMOND_HELMET, 1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
@@ -117,7 +125,13 @@ public class PlayHandler implements IHandler {
                     player.packetHandler().sendSystemMessage(e.messageComponent());
                 }
             }else if(pak instanceof ServerboundClickContainerPacket a){
-                System.out.println(a.carriedItem().type());
+                System.out.println(a.carriedItem().amount());
+            }else if(pak instanceof ServerboundCloseContainerPacket a){
+                Inventory inventory=new GenericInventory(9);
+                for(int i=0;i<9;i++){
+                    inventory.set(i,new ItemStack(Material.ACACIA_LOG, (int) (Math.random()*10+1),ItemMeta.defaultItemMeta(Material.ACACIA_BOAT)));
+                }
+                player.openInventory(new InventoryView(inventory,new TextComponent("hello")));
             }
         }
         while (player.isOnline()) {

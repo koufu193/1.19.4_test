@@ -8,5 +8,7 @@ public interface Inventory {
     InventoryType type();
     @NotNull
     ItemStack get(int slotId);
+    void set(int slotId,@Nullable ItemStack item);
     ItemStack[] getAllContents();
+    int size();
 }

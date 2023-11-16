@@ -1,4 +1,4 @@
-package io.github.koufu193.core.game.entities.handlers;
+package io.github.koufu193.core.game.entities.handlers.v1194;
 
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.data.Difficulty;
@@ -8,6 +8,7 @@ import io.github.koufu193.core.game.data.inventory.HorseInventory;
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.LightData;
 import io.github.koufu193.network.IPackets;
@@ -26,7 +27,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class V1194PlayerPacketHandler implements PlayerPacketHandler{
+public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     private final AsynchronousSocketChannel channel;
     private final PacketEncoder encoder;
     private final PacketDecoder decoder;
@@ -157,6 +158,11 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler{
     public void openInventory(byte windowId,@NotNull InventoryView view) {
         if(view.inventory() instanceof HorseInventory horse) sendPacket(new ClientboundOpenHorseScreenPacket(windowId,horse));
         else sendPacket(new ClientboundOpenScreenPacket(windowId,view));
+    }
+
+    @Override
+    public void closeInventory(byte windowId) {
+        sendPacket(new ClientboundCloseContainerPacket(windowId));
     }
 
     @Override

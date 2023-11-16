@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public class ClientboundOpenHorseScreenPacket extends InventoryPacket{
     ClientboundOpenHorseScreenPacket(){}
     public ClientboundOpenHorseScreenPacket(byte windowId, @NotNull HorseInventory inventory){
-        this(windowId,inventory.slotSize(),inventory.entity().entityId());
+        this(windowId,inventory.size(),inventory.entity().entityId());
     }
     public ClientboundOpenHorseScreenPacket(byte windowId,int slotCount,int entityId){
         this.fields(windowId,slotCount,entityId);

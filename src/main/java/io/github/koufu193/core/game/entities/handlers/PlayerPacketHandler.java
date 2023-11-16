@@ -40,6 +40,7 @@ public interface PlayerPacketHandler {
     void sendPlayerInfo(@NotNull ClientboundUpdatePlayerInfoPacket.PlayerActions... actions);
     void removePlayerInfo(@NotNull UUID... ids);
     void kick(@NotNull TextComponent reason);
+    void closeInventory(byte windowId);
     void sendPacket(@NotNull AbstractPacket packet);
     void sendPacketOrThrow(@NotNull AbstractPacket packet);
     PacketEncoder encoder();

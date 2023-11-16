@@ -1,5 +1,6 @@
 package io.github.koufu193.core.game.data.inventory;
 
+import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftInventoryPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -18,17 +19,23 @@ public class PlayerInventory implements Inventory{
     private final ItemStack[] extraItems=new ItemStack[5];
     private final ItemStack[] craftingInput=new ItemStack[4];
     private final ItemStack craftingOutput=ItemStack.AIR;
+    private final InventoryView VIEW;
     {
         Arrays.fill(items,ItemStack.AIR);
         Arrays.fill(extraItems,ItemStack.AIR);
         Arrays.fill(craftingInput,ItemStack.AIR);
+    }
+    public PlayerInventory(){
+        this.VIEW=new InventoryView(this, TextComponent.EMPTY);
     }
 
     @Override
     public InventoryType type() {
         return InventoryType.PLAYER;
     }
-
+    public InventoryView asView(){
+        return this.VIEW;
+    }
     @NotNull
     @Override
     public ItemStack get(int slotId) {
@@ -37,6 +44,7 @@ public class PlayerInventory implements Inventory{
         if(armor==null) throw new IllegalArgumentException(String.format("invalid slotId %d",slotId));
         return this.get(armor);
     }
+
 
     @Override
     public ItemStack[] getAllContents() {
@@ -48,6 +56,12 @@ public class PlayerInventory implements Inventory{
         contents.add(get(PlayerArmor.OFFHAND));
         return contents.toArray(ItemStack[]::new);
     }
+
+    @Override
+    public int size() {
+        return this.items.length;
+    }
+
     public int selectedSlot(){
         return this.selectedSlot;
     }
@@ -63,7 +77,7 @@ public class PlayerInventory implements Inventory{
         if(item==null) item=ItemStack.AIR;
         extraItems[armor.ordinal()]=item.clone();
     }
-    public void set(int slotId,ItemStack item){
+    public void set(int slotId,@Nullable ItemStack item){
         if(item==null) item=ItemStack.AIR;
         if(0<=slotId&&slotId<items.length){
             this.items[slotId]=item.clone();
