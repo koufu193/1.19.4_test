@@ -53,7 +53,7 @@ public class ServerProperties {
                 properties.debug= Boolean.parseBoolean((String) properties1.getOrDefault("debug","false"));
                 properties.hardcore= Boolean.parseBoolean((String) properties1.getOrDefault("hardcore","false"));
                 properties.networkCompressionThreshold= Integer.parseInt((String) properties1.getOrDefault("network-compression-threshold","256"));
-                properties.defaultGameMode=Player.GameMode.fromString((String) properties1.getOrDefault("gamemode","survival"));
+                properties.defaultGameMode= Player.GameMode.fromString((String) properties1.getOrDefault("gamemode","survival"));
                 properties.maxPlayers= Integer.parseInt((String)  properties1.getOrDefault("max-players","20"));
                 properties.levelFolder = new File(file.getParent(),(String) properties1.getOrDefault("level-name","world"));
                 if(properties.maxPlayers<0) throw new RuntimeException("max-players must be 0 at least");

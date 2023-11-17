@@ -1,13 +1,14 @@
-package io.github.koufu193.core.game.entities.handlers;
+package io.github.koufu193.core.game.entities.player;
 
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.data.Difficulty;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.component.TextComponent;
-import io.github.koufu193.core.game.data.inventory.Inventory;
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.network.listener.PacketListener;
+import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.LightData;
 import io.github.koufu193.network.IPackets;
@@ -43,10 +44,13 @@ public interface PlayerPacketHandler {
     void closeInventory(byte windowId);
     void sendPacket(@NotNull AbstractPacket packet);
     void sendPacketOrThrow(@NotNull AbstractPacket packet);
+    void addListener(@NotNull PacketListener listener);
+    PacketListeners listeners();
     PacketEncoder encoder();
     PacketDecoder decoder();
     AbstractPacket read(@NotNull IPackets packets);
     void compressionSize(int size);
     void openInventory(byte windowId,@NotNull InventoryView view);
     void sendContainerContents(byte windowId, byte stateId, @NotNull InventoryView view, @Nullable ItemStack playerHeldItem);
+    AbstractPacket readPlayPacket();
 }

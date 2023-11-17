@@ -1,5 +1,7 @@
 package io.github.koufu193.core.game.entities;
 
+import io.github.koufu193.core.game.commands.Command;
+import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.data.GameProfile;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
@@ -8,17 +10,17 @@ import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
-import io.github.koufu193.core.game.entities.handlers.InventoryHandler;
-import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
-import io.github.koufu193.core.game.entities.handlers.v1194.V1194PlayerPacketHandler;
-import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHandler;
-import io.github.koufu193.core.game.entities.interfaces.IPlayer;
+import io.github.koufu193.core.game.entities.player.CommandManager;
+import io.github.koufu193.core.game.entities.player.InventoryHandler;
+import io.github.koufu193.core.game.entities.player.PlayerPacketHandler;
+import io.github.koufu193.core.game.entities.player.v1194.V1194PlayerPacketHandler;
+import io.github.koufu193.core.game.entities.player.movement.PlayerMovementHandler;
 
 import io.github.koufu193.core.game.world.World;
+import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
 import io.github.koufu193.server.MinecraftServer;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
@@ -31,7 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-public class Player extends Entity implements IPlayer{
+public class Player extends Entity implements io.github.koufu193.core.game.entities.interfaces.IPlayer {
     private final AsynchronousSocketChannel channel;
     protected GameMode gameMode;
     protected GameMode previousGameMode;
@@ -46,7 +48,8 @@ public class Player extends Entity implements IPlayer{
     private final PlayerMovementHandler movementHandler=new PlayerMovementHandler(this);
     private final PlayerInventory inventory;
     private final InventoryHandler inventoryHandler;
-    public Player(MinecraftServer server,AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt,GameProfile profile) {
+    private final CommandManager commandManager=new CommandManager(this);
+    public Player(MinecraftServer server, AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt, GameProfile profile) {
         super(server,entityId,nbt,server.worldFromDimension(Objects.requireNonNull(nbt.getString("Dimension"))));
         this.channel=channel;
         this.gameMode=GameMode.fromId((int)nbt.getOrPut("playerGameType",()->NBT.Int(server.serverProperties().defaultGameMode().id())).getValue());
@@ -58,7 +61,7 @@ public class Player extends Entity implements IPlayer{
         this.totalExpPoints=(int)nbt.getOrPut("XpTotal",()->NBT.Int(0)).getValue();
         this.expLevel=(int)nbt.getOrPut("XpLevel",()->NBT.Int(0)).getValue();
         this.expProgress=(float)nbt.getOrPut("XpP",()->NBT.Float(0)).getValue();
-        this.packetHandler=new V1194PlayerPacketHandler(this.channel,new PacketEncoder(),new PacketDecoder());
+        this.packetHandler=new V1194PlayerPacketHandler(this,this.channel,new PacketEncoder(),new PacketDecoder());
         this.profile=profile;
         this.inventory=loadInventory(nbt);
         this.inventoryHandler=new InventoryHandler(this);
@@ -227,6 +230,10 @@ public class Player extends Entity implements IPlayer{
     public PlayerInventory inventory() {
         return this.inventory;
     }
+    public void setCommands(@NotNull RootCommandNode root){
+        this.commandManager.root(root);
+        this.packetHandler.sendCommandNode(root);
+    }
 
     @Override
     public void kick(@NotNull TextComponent reason) {
@@ -247,12 +254,27 @@ public class Player extends Entity implements IPlayer{
         this.inventoryHandler.open(view);
         this.openingView=view;
     }
+    public void onClose(){
+        if(this.openingView==null) return;
+        this.inventoryHandler.onClose(this.openingView);
+        this.openingView=null;
+    }
 
     @Override
     public void closeInventory() {
         if(this.openingView==null) return;
         this.inventoryHandler.close(this.openingView);
         this.openingView=null;
+    }
+
+    @Override
+    public void dispatchCommand(@NotNull String command) {
+        try {
+            Command c = Command.parse(command,this.commandManager.root());
+            c.execute(this);
+        } catch (CommandException e) {
+            this.packetHandler.sendSystemMessage(e.messageComponent());
+        }
     }
 
     public enum GameMode{

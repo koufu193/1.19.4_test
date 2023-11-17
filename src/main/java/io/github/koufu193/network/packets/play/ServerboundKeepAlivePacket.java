@@ -15,6 +15,6 @@ public class ServerboundKeepAlivePacket extends AbstractPacket {
         return 0x12;
     }
     public long id(){
-        return (Long)fields()[0];
+        return (long)fields()[0];
     }
 }

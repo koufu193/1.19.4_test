@@ -1,4 +1,4 @@
-package io.github.koufu193.core.game.entities.handlers;
+package io.github.koufu193.core.game.entities.player;
 
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.entities.interfaces.IPlayer;

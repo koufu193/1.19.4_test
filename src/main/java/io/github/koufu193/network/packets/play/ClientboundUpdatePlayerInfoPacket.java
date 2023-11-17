@@ -3,7 +3,6 @@ package io.github.koufu193.network.packets.play;
 import io.github.koufu193.core.game.data.GameProfile;
 import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.entities.Player;
-import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 import io.github.koufu193.core.properties.Properties;
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
@@ -93,7 +92,7 @@ public class ClientboundUpdatePlayerInfoPacket extends AbstractPacket {
             this.properties = properties;
         }
 
-        public AddPlayerAction(@NotNull IPlayer player) {
+        public AddPlayerAction(@NotNull io.github.koufu193.core.game.entities.interfaces.IPlayer player) {
             this(player.name(), player.profile().properties());
         }
         public AddPlayerAction(@NotNull GameProfile profile){

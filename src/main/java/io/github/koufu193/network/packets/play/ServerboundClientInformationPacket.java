@@ -5,9 +5,6 @@ import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-
 public class ServerboundClientInformationPacket extends AbstractPacket {
     @Override
     public PacketFormat format() {

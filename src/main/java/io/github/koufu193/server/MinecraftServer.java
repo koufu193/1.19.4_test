@@ -8,16 +8,13 @@ import io.github.koufu193.core.loaders.LevelDat;
 import io.github.koufu193.core.loaders.PlayerDataLoader;
 import io.github.koufu193.core.loaders.ServerProperties;
 import io.github.koufu193.core.loaders.UserCaches;
-import org.apache.commons.io.filefilter.FileFileFilter;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.UUID;
 
 public class MinecraftServer {
     private final GameRules gameRules=new GameRules();

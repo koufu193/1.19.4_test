@@ -1,7 +1,6 @@
 package io.github.koufu193.network.handlers;
 
 
-import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.IntegerArgumentNode;
@@ -15,9 +14,9 @@ import io.github.koufu193.core.game.data.inventory.*;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
-import io.github.koufu193.core.game.entities.interfaces.IPlayer;
+import io.github.koufu193.core.game.network.listener.ExecuteCommandPacketListener;
+import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.world.World;
-import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.handlers.play.KeepAliveHandler;
 import io.github.koufu193.network.packets.AbstractPacket;
@@ -93,12 +92,12 @@ public class PlayHandler implements IHandler {
                         LiteralCommandNode.literal("held").then(
                                 IntegerArgumentNode.integer("id",0,8).execute(((executor, command) ->{
                                     int value=(Integer)command.args("id");
-                                    ((IPlayer)executor).packetHandler().sendPacket(new ClientboundSetHeldSlotPacket((byte) value));
+                                    ((io.github.koufu193.core.game.entities.interfaces.IPlayer)executor).packetHandler().sendPacket(new ClientboundSetHeldSlotPacket((byte) value));
                                 }))
                         )
                 ).then(
                         LiteralCommandNode.literal("open").execute(((executor, command) ->{
-                            IPlayer player1=(IPlayer) executor;
+                            io.github.koufu193.core.game.entities.interfaces.IPlayer player1=(io.github.koufu193.core.game.entities.interfaces.IPlayer) executor;
                             Inventory inventory=new GenericInventory(9);
                             for(int i=0;i<9;i++){
                                 inventory.set(i,new ItemStack(Material.ACACIA_LOG, (int) (Math.random()*10+1),ItemMeta.defaultItemMeta(Material.ACACIA_BOAT)));
@@ -109,23 +108,16 @@ public class PlayHandler implements IHandler {
         );
         player.inventory().set(PlayerInventory.PlayerArmor.HEAD, new ItemStack(Material.DIAMOND_HELMET, 1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
         player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket((byte) 0,0, new InventoryView(player.inventory()), null));
-        player.packetHandler().sendCommandNode(rootNode);
+        player.setCommands(rootNode);
         new KeepAliveHandler(player).handleAsync();
         AbstractPacket pak = null;
-        while ((pak = player.packetHandler().read(PlayPackets.getPackets())) != null && player.isOnline()) {
+        PacketListeners listeners=this.player.packetHandler().listeners();
+        listeners.add(new ExecuteCommandPacketListener());
+        while ((pak = player.packetHandler().readPlayPacket()) != null && player.isOnline()) {
             if (pak instanceof ServerboundMovementPacket packet) {
                 if (!(pak instanceof ServerboundSetPlayerRotationPacket)) {
                     player.location(((ServerboundMovementPacket) pak).toLocation(player.location()));
                 }
-            } else if (pak instanceof ServerboundChatCommandPacket packet) {
-                try {
-                    Command command = Command.parse(packet.command(), rootNode);
-                    command.execute(player);
-                } catch (CommandException e) {
-                    player.packetHandler().sendSystemMessage(e.messageComponent());
-                }
-            }else if(pak instanceof ServerboundClickContainerPacket a){
-                System.out.println(a.carriedItem().amount());
             }else if(pak instanceof ServerboundCloseContainerPacket a){
                 Inventory inventory=new GenericInventory(9);
                 for(int i=0;i<9;i++){

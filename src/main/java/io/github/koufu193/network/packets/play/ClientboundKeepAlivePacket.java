@@ -15,6 +15,9 @@ public class ClientboundKeepAlivePacket extends AbstractPacket {
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Long);
     }
+    public long id(){
+        return (long) this.fields()[0];
+    }
 
     @Override
     public int packetId() {

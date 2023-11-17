@@ -1,4 +1,4 @@
-package io.github.koufu193.core.game.entities.handlers.movement;
+package io.github.koufu193.core.game.entities.player.movement;
 
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.entities.Player;

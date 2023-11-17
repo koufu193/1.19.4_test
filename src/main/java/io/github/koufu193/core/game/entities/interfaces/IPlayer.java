@@ -6,8 +6,8 @@ import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.entities.Player;
-import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
-import io.github.koufu193.core.game.entities.handlers.movement.PlayerMovementHandler;
+import io.github.koufu193.core.game.entities.player.PlayerPacketHandler;
+import io.github.koufu193.core.game.entities.player.movement.PlayerMovementHandler;
 import io.github.koufu193.core.game.world.World;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,6 +38,7 @@ public interface IPlayer extends CommandExecutor,IEntity {
     boolean isOnline();
     void openInventory(@NotNull InventoryView view);
     void closeInventory();
+    void dispatchCommand(@NotNull String command);
     enum MainHand{
         Left,Right
     }

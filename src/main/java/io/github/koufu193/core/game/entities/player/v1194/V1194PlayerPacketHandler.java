@@ -1,4 +1,4 @@
-package io.github.koufu193.core.game.entities.handlers.v1194;
+package io.github.koufu193.core.game.entities.player.v1194;
 
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.data.Difficulty;
@@ -8,7 +8,9 @@ import io.github.koufu193.core.game.data.inventory.HorseInventory;
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
-import io.github.koufu193.core.game.entities.handlers.PlayerPacketHandler;
+import io.github.koufu193.core.game.entities.player.PlayerPacketHandler;
+import io.github.koufu193.core.game.network.listener.PacketListener;
+import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.LightData;
 import io.github.koufu193.network.IPackets;
@@ -31,10 +33,12 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     private final AsynchronousSocketChannel channel;
     private final PacketEncoder encoder;
     private final PacketDecoder decoder;
-    public V1194PlayerPacketHandler(@NotNull AsynchronousSocketChannel channel,@NotNull PacketEncoder encoder,@NotNull PacketDecoder decoder){
+    private final PacketListeners listeners;
+    public V1194PlayerPacketHandler(@NotNull Player player,@NotNull AsynchronousSocketChannel channel,@NotNull PacketEncoder encoder,@NotNull PacketDecoder decoder){
         this.channel=channel;
         this.encoder=encoder;
         this.decoder=decoder;
+        this.listeners=new PacketListeners(player);
     }
     @Override
     public void teleport(@NotNull Location location) {
@@ -114,6 +118,7 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     public synchronized void sendPacket(@NotNull AbstractPacket packet){
         try{
             sendPacketOrThrow(packet);
+            this.listeners.onSend(packet);
         } catch (RuntimeException e) {
             reportError(e);
         }
@@ -129,6 +134,16 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     }
 
     @Override
+    public void addListener(@NotNull PacketListener listener) {
+        this.listeners.add(listener);
+    }
+
+    @Override
+    public PacketListeners listeners() {
+        return this.listeners;
+    }
+
+    @Override
     public PacketEncoder encoder() {
         return this.encoder;
     }
@@ -141,7 +156,9 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     @Override
     public AbstractPacket read(@NotNull IPackets packets) {
         try {
-            return this.decoder.decode(this.channel, packets);
+            AbstractPacket packet=this.decoder.decode(this.channel, packets);
+            this.listeners.onReceive(packet);
+            return packet;
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             reportError(e);
             return null;
@@ -168,6 +185,11 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     @Override
     public void sendContainerContents(byte windowId, byte stateId, @NotNull InventoryView view, @Nullable ItemStack playerHeldItem) {
         sendPacket(new ClientboundSetContainerContentsPacket(windowId,stateId,view,playerHeldItem));
+    }
+
+    @Override
+    public AbstractPacket readPlayPacket() {
+        return this.read(PlayPackets.getPackets());
     }
 
     private void reportError(Throwable throwable){
