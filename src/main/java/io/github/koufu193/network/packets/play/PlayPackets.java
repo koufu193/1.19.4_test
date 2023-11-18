@@ -1,8 +1,8 @@
 package io.github.koufu193.network.packets.play;
 
-import io.github.koufu193.exceptions.InvalidPacketIdException;
 import io.github.koufu193.network.IPackets;
 import io.github.koufu193.network.packets.AbstractPacket;
+import io.github.koufu193.network.packets.UndefinedPacket;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +56,7 @@ public class PlayPackets implements IPackets {
             reg(ServerboundSetCreativeModeSlotPacket::new);
             reg(ServerboundCloseContainerPacket::new);
             reg(ServerboundClickContainerPacket::new);
+            reg(ServerboundPlayerAbilitiesPacket::new);
         }
 
         private void reg(Supplier<AbstractPacket> supp) {
@@ -67,18 +68,14 @@ public class PlayPackets implements IPackets {
     @Override
     public AbstractPacket getClientboundPacket(int id) {
         Supplier<AbstractPacket> packetSupplier = clientboundPackets.get(id);
-        if (packetSupplier == null) throw new InvalidPacketIdException("Invalid packet id of " + id);
+        if (packetSupplier == null) return new UndefinedPacket(id);
         return packetSupplier.get();
     }
 
     @Override
     public AbstractPacket getServerboundPacket(int id) {
         Supplier<AbstractPacket> packetSupplier = serverboundPackets.get(id);
-        if (packetSupplier == null) {
-            System.out.println(Integer.toHexString(id));
-            return null;
-            //throw new InvalidPacketIdException("Invalid packet id of "+id);
-        }
+        if (packetSupplier == null) return new UndefinedPacket(id);
         return packetSupplier.get();
     }
 

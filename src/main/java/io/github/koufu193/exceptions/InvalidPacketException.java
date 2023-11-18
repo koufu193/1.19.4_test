@@ -2,7 +2,7 @@ package io.github.koufu193.exceptions;
 
 import io.github.koufu193.network.packets.AbstractPacket;
 
-public class InvalidPacketException extends RuntimeException{
+public class InvalidPacketException extends PacketException{
     private final AbstractPacket packet;
     public InvalidPacketException(AbstractPacket packet){
         super();

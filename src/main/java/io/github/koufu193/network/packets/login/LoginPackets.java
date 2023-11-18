@@ -1,10 +1,8 @@
 package io.github.koufu193.network.packets.login;
 
-import io.github.koufu193.exceptions.InvalidPacketIdException;
+import io.github.koufu193.exceptions.UndefinedPacketIdException;
 import io.github.koufu193.network.IPackets;
 import io.github.koufu193.network.packets.AbstractPacket;
-import io.github.koufu193.network.packets.status.*;
-import io.netty.handler.codec.DecoderException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,14 +21,14 @@ public class LoginPackets implements IPackets {
     @Override
     public AbstractPacket getClientboundPacket(int id) {
         Supplier<AbstractPacket> packetSupplier=clientboundPackets.get(id);
-        if(packetSupplier==null) throw new InvalidPacketIdException("Invalid packet id of "+id);
+        if(packetSupplier==null) throw new UndefinedPacketIdException("Invalid packet id of "+id);
         return packetSupplier.get();
     }
 
     @Override
     public AbstractPacket getServerboundPacket(int id) {
         Supplier<AbstractPacket> packetSupplier=serverboundPackets.get(id);
-        if(packetSupplier==null) throw new InvalidPacketIdException("Invalid packet id of "+id);
+        if(packetSupplier==null) throw new UndefinedPacketIdException("Invalid packet id of "+id);
         return packetSupplier.get();
     }
     public static LoginPackets getPackets() {

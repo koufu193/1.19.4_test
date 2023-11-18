@@ -52,5 +52,5 @@ public interface PlayerPacketHandler {
     void compressionSize(int size);
     void openInventory(byte windowId,@NotNull InventoryView view);
     void sendContainerContents(byte windowId, byte stateId, @NotNull InventoryView view, @Nullable ItemStack playerHeldItem);
-    AbstractPacket readPlayPacket();
+    AbstractPacket handlePacket();
 }

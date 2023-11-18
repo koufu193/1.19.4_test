@@ -118,7 +118,6 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     public synchronized void sendPacket(@NotNull AbstractPacket packet){
         try{
             sendPacketOrThrow(packet);
-            this.listeners.onSend(packet);
         } catch (RuntimeException e) {
             reportError(e);
         }
@@ -128,6 +127,7 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     public synchronized void sendPacketOrThrow(@NotNull AbstractPacket packet) {
         try{
             channel.write(ByteBuffer.wrap(this.encoder.encode(packet))).get();
+            this.listeners.onSend(packet);
         } catch (IOException | ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -188,7 +188,7 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     }
 
     @Override
-    public AbstractPacket readPlayPacket() {
+    public AbstractPacket handlePacket() {
         return this.read(PlayPackets.getPackets());
     }
 

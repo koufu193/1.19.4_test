@@ -14,8 +14,11 @@ import io.github.koufu193.core.game.data.inventory.*;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 import io.github.koufu193.core.game.network.listener.ExecuteCommandPacketListener;
+import io.github.koufu193.core.game.network.listener.KeepAlivePacketListener;
 import io.github.koufu193.core.game.network.listener.PacketListeners;
+import io.github.koufu193.core.game.network.listener.debug.UndefinedPacketAlerter;
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.handlers.play.KeepAliveHandler;
@@ -84,47 +87,45 @@ public class PlayHandler implements IHandler {
                         LiteralCommandNode.literal("kickme").then(
                                 StringArgumentNode.quotableString("color").then(
                                         StringArgumentNode.quotableString("text").execute((executor, command) -> {
-                                            player.kick(new TextComponent((String)command.args("text"),ChatColor.byString((String)command.args("color"))));
+                                            player.kick(new TextComponent((String) command.args("text"), ChatColor.byString((String) command.args("color"))));
                                         })
                                 )
                         )
                 ).then(
                         LiteralCommandNode.literal("held").then(
-                                IntegerArgumentNode.integer("id",0,8).execute(((executor, command) ->{
-                                    int value=(Integer)command.args("id");
-                                    ((io.github.koufu193.core.game.entities.interfaces.IPlayer)executor).packetHandler().sendPacket(new ClientboundSetHeldSlotPacket((byte) value));
+                                IntegerArgumentNode.integer("id", 0, 8).execute(((executor, command) -> {
+                                    int value = (Integer) command.args("id");
+                                    ((io.github.koufu193.core.game.entities.interfaces.IPlayer) executor).packetHandler().sendPacket(new ClientboundSetHeldSlotPacket((byte) value));
                                 }))
                         )
                 ).then(
-                        LiteralCommandNode.literal("open").execute(((executor, command) ->{
-                            io.github.koufu193.core.game.entities.interfaces.IPlayer player1=(io.github.koufu193.core.game.entities.interfaces.IPlayer) executor;
-                            Inventory inventory=new GenericInventory(9);
-                            for(int i=0;i<9;i++){
-                                inventory.set(i,new ItemStack(Material.ACACIA_LOG, (int) (Math.random()*10+1),ItemMeta.defaultItemMeta(Material.ACACIA_BOAT)));
+                        LiteralCommandNode.literal("open").execute(((executor, command) -> {
+                            IPlayer player1 = (IPlayer) executor;
+                            Inventory inventory = new GenericInventory(9);
+                            for (int i = 0; i < 9; i++) {
+                                inventory.set(i, new ItemStack(Material.ACACIA_LOG, (int) (Math.random() * 10 + 1), ItemMeta.defaultItemMeta(Material.ACACIA_BOAT)));
                             }
-                            player1.openInventory(new InventoryView(inventory,new TextComponent("hello")));
+                            player1.openInventory(new InventoryView(inventory, new TextComponent("hello")));
                         }))
+                ).then(
+                        LiteralCommandNode.literal("revChunk").then(
+                                IntegerArgumentNode.integer("x").then(
+                                        IntegerArgumentNode.integer("z").execute(((executor, command) -> {
+                                            IPlayer player1 = (IPlayer) executor;
+                                            player1.packetHandler().sendChunk(world.chunk((Integer)command.args("x"),(Integer)command.args("z")));
+                                        }))))
                 )
         );
         player.inventory().set(PlayerInventory.PlayerArmor.HEAD, new ItemStack(Material.DIAMOND_HELMET, 1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
-        player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket((byte) 0,0, new InventoryView(player.inventory()), null));
+        player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket((byte) 0, 0, new InventoryView(player.inventory()), null));
         player.setCommands(rootNode);
-        new KeepAliveHandler(player).handleAsync();
         AbstractPacket pak = null;
-        PacketListeners listeners=this.player.packetHandler().listeners();
+        PacketListeners listeners = this.player.packetHandler().listeners();
         listeners.add(new ExecuteCommandPacketListener());
-        while ((pak = player.packetHandler().readPlayPacket()) != null && player.isOnline()) {
-            if (pak instanceof ServerboundMovementPacket packet) {
-                if (!(pak instanceof ServerboundSetPlayerRotationPacket)) {
-                    player.location(((ServerboundMovementPacket) pak).toLocation(player.location()));
-                }
-            }else if(pak instanceof ServerboundCloseContainerPacket a){
-                Inventory inventory=new GenericInventory(9);
-                for(int i=0;i<9;i++){
-                    inventory.set(i,new ItemStack(Material.ACACIA_LOG, (int) (Math.random()*10+1),ItemMeta.defaultItemMeta(Material.ACACIA_BOAT)));
-                }
-                player.openInventory(new InventoryView(inventory,new TextComponent("hello")));
-            }
+        listeners.add(new KeepAlivePacketListener());
+        listeners.add(new UndefinedPacketAlerter());
+        new KeepAliveHandler(player).handleAsync();
+        while ((pak = player.packetHandler().handlePacket()) != null && player.isOnline()) {
         }
         while (player.isOnline()) {
         }

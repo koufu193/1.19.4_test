@@ -13,7 +13,7 @@ public class KeepAliveHandler{
         new Thread(() -> {
             while (player.isOnline()){
                 try {
-                    player.packetHandler().sendPacketOrThrow(new ClientboundKeepAlivePacket(10));
+                    player.packetHandler().sendPacketOrThrow(new ClientboundKeepAlivePacket((long) (Math.random()*100)));
                     Thread.sleep(1000);
                 }catch (Throwable e){
                     e.printStackTrace();

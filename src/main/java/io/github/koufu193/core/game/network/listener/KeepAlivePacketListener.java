@@ -1,6 +1,7 @@
 package io.github.koufu193.core.game.network.listener;
 
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.network.handlers.play.KeepAliveHandler;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.ClientboundKeepAlivePacket;
 import io.github.koufu193.network.packets.play.ServerboundKeepAlivePacket;
@@ -11,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * @see KeepAliveHandler
+ */
 public class KeepAlivePacketListener implements PacketListener{
     private final HashMap<UUID,List<Long>> ids=new HashMap<>();
     @Override
