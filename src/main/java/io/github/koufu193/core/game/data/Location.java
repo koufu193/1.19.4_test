@@ -3,6 +3,8 @@ package io.github.koufu193.core.game.data;
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 
+import java.util.Objects;
+
 public class Location implements Cloneable{
     private World world;
     private double x;
@@ -111,5 +113,46 @@ public class Location implements Cloneable{
     @Override
     public Location clone(){
         return new Location(world(),x(),y(),z(),yaw(),pitch());
+    }
+
+    @Override
+    public String toString() {
+        return "Location{" +
+                "world=" + world +
+                ", x=" + x +
+                ", y=" + y +
+                ", z=" + z +
+                ", yaw=" + yaw +
+                ", pitch=" + pitch +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Location location)) return false;
+
+        if (Double.compare(location.x, x) != 0) return false;
+        if (Double.compare(location.y, y) != 0) return false;
+        if (Double.compare(location.z, z) != 0) return false;
+        if (Float.compare(location.yaw, yaw) != 0) return false;
+        if (Float.compare(location.pitch, pitch) != 0) return false;
+        return Objects.equals(world, location.world);
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = world != null ? world.hashCode() : 0;
+        temp = Double.doubleToLongBits(x);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(y);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(z);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (yaw != +0.0f ? Float.floatToIntBits(yaw) : 0);
+        result = 31 * result + (pitch != +0.0f ? Float.floatToIntBits(pitch) : 0);
+        return result;
     }
 }

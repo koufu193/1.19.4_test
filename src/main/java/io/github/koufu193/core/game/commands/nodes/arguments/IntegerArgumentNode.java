@@ -93,4 +93,9 @@ public class IntegerArgumentNode extends ArgumentCommandNode<Integer>{
     public static IntegerArgumentNode integer(@NotNull String name){
         return integer(name,Integer.MIN_VALUE,Integer.MAX_VALUE);
     }
+
+    @Override
+    public boolean isValidInput(@NotNull StringCommandReader reader) {
+        return reader.read().matches("^[+\\-]?\\d+$");
+    }
 }

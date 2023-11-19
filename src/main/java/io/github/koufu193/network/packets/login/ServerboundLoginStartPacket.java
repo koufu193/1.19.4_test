@@ -6,6 +6,7 @@ import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 public class ServerboundLoginStartPacket extends AbstractPacket {

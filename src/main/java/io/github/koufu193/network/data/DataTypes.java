@@ -7,7 +7,6 @@ import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.core.game.data.component.TextComponent;
-import io.github.koufu193.core.game.data.component.serializers.TextComponentSerializer;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.world.chunk.LightData;
@@ -19,7 +18,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jglrxavpok.hephaistos.nbt.*;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -83,7 +84,7 @@ public final class DataTypes {
 
         @Override
         public byte[] encode(java.lang.String value) {
-            byte[] data=value.getBytes(StandardCharsets.UTF_8);
+            byte[] data = value.getBytes(StandardCharsets.UTF_8);
             byte[] length = DataTypes.VarInt.encode(data.length);
             return ByteBuffer.allocate(length.length + data.length).put(length).put(data).array();
         }
@@ -199,7 +200,7 @@ public final class DataTypes {
         public int size(org.jglrxavpok.hephaistos.nbt.NBT value) {
             try {
                 return value.toByteArray().length + 3;
-            }catch (IOException e){
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -256,7 +257,7 @@ public final class DataTypes {
     public static final DataType<Location> LongLocation = new DataType<>() {
         @Override
         public Location decode(ByteBuffer buffer) {
-            return Location.from(buffer.getLong());
+            return io.github.koufu193.core.game.data.Location.from(buffer.getLong());
         }
 
         @Override
@@ -413,7 +414,7 @@ public final class DataTypes {
                 buffer.get(data);
                 blockLightsArray.set(i, data);
             }
-            return new LightData(0,0,skyLightMask, blockLightMask, emptySkyLightMask, emptyBlockLightMask, skyLightsArray, blockLightsArray);
+            return new LightData(0, 0, skyLightMask, blockLightMask, emptySkyLightMask, emptyBlockLightMask, skyLightsArray, blockLightsArray);
         }
     };
     public static final DataType<Long> VarLong = new DataType<>() {
@@ -476,7 +477,7 @@ public final class DataTypes {
             return value.length;
         }
     };
-    public static final DataType<IPluginChannel> PluginChannel= new DataType<>() {
+    public static final DataType<IPluginChannel> PluginChannel = new DataType<>() {
         @Override
         public IPluginChannel decode(ByteBuffer buffer) {
             IPluginChannel channel = PluginChannels.get(DataTypes.Identifier.decode(buffer));
@@ -497,9 +498,10 @@ public final class DataTypes {
             return DataTypes.Identifier.size(value.channel()) + value.bytes().length;
         }
     };
-    public static final DataType<TextComponent> Chat=new DataType<TextComponent>() {
-        private static final Gson gson=new Gson();
-        private static final TypeToken<TextComponent> TYPE_TOKEN=TypeToken.get(TextComponent.class);
+    public static final DataType<TextComponent> Chat = new DataType<>() {
+        private static final Gson gson = new Gson();
+        private static final TypeToken<TextComponent> TYPE_TOKEN = TypeToken.get(TextComponent.class);
+
         @Override
         public TextComponent decode(ByteBuffer buffer) {
             return gson.fromJson(DataTypes.String.decode(buffer), TYPE_TOKEN);
@@ -515,7 +517,7 @@ public final class DataTypes {
             return DataTypes.String.size(gson.toJson(value));
         }
     };
-    public static final DataType<Properties> Properties= new DataTypes.DataType<>() {
+    public static final DataType<Properties> Properties = new DataTypes.DataType<>() {
         @Override
         public byte[] encode(Properties value) {
             ByteArrayOutputStream output = new ByteArrayOutputStream(this.size(value));
@@ -552,45 +554,70 @@ public final class DataTypes {
             return new Property(DataTypes.String.decode(buffer), DataTypes.String.decode(buffer), DataTypes.Bool.decode(buffer) ? DataTypes.String.decode(buffer) : null);
         }
     };
-    public static final DataType<ItemStack> Item= new DataType<>() {
+    public static final DataType<ItemStack> Item = new DataType<>() {
         @Override
         public ItemStack decode(ByteBuffer buffer) {
-            if(!DataTypes.Bool.decode(buffer)) return ItemStack.AIR;
-            int itemId=DataTypes.VarInt.decode(buffer);
-            if(itemId==-1) return null;
-            Material material=Material.fromItemId(itemId);
-            int amount=buffer.get();
-            NBT nbt=DataTypes.NBT.decode(buffer);
-            if(nbt instanceof NBTEnd) nbt=NBTCompound.EMPTY;
-            return new ItemStack(material,amount,ItemMeta.defaultItemMeta(material, (NBTCompound) nbt));
+            if (!DataTypes.Bool.decode(buffer)) return ItemStack.AIR;
+            int itemId = DataTypes.VarInt.decode(buffer);
+            if (itemId == -1) return null;
+            Material material = Material.fromItemId(itemId);
+            int amount = buffer.get();
+            NBT nbt = DataTypes.NBT.decode(buffer);
+            if (nbt instanceof NBTEnd) nbt = NBTCompound.EMPTY;
+            return new ItemStack(material, amount, ItemMeta.defaultItemMeta(material, (NBTCompound) nbt));
         }
 
         @Override
         public byte[] encode(@Nullable ItemStack value) {
-            if(value==null) value=ItemStack.AIR;
-            ByteArrayOutputStream output=new ByteArrayOutputStream(size(value));
-            output.writeBytes(DataTypes.Bool.encode(value.type()!=Material.AIR));
-            if(value.type()==Material.AIR) return output.toByteArray();
+            if (value == null) value = ItemStack.AIR;
+            ByteArrayOutputStream output = new ByteArrayOutputStream(size(value));
+            output.writeBytes(DataTypes.Bool.encode(value.type() != Material.AIR));
+            if (value.type() == Material.AIR) return output.toByteArray();
             output.writeBytes(DataTypes.VarInt.encode(value.type().itemId()));
             output.write(value.amount());
-            NBTCompound nbt=value.itemMeta().toNBT();
-            if(nbt.isEmpty()) output.write(0);
+            NBTCompound nbt = value.itemMeta().toNBT();
+            if (nbt.isEmpty()) output.write(0);
             else output.writeBytes(DataTypes.NBT.encode(nbt));
             return output.toByteArray();
         }
 
         @Override
         public int size(@Nullable ItemStack value) {
-            if(value==null) value=ItemStack.AIR;
-            if(value.type()==Material.AIR) return 1;
-            int bytes=1+DataTypes.VarInt.size(value.type().itemId());
-            bytes+=(byte)value.amount();
-            NBTCompound nbt=value.itemMeta().toNBT();;
-            if(nbt.isEmpty()) bytes+=1;
-            else bytes+=DataTypes.NBT.size(nbt);
+            if (value == null) value = ItemStack.AIR;
+            if (value.type() == Material.AIR) return 1;
+            int bytes = 1 + DataTypes.VarInt.size(value.type().itemId());
+            bytes += (byte) value.amount();
+            NBTCompound nbt = value.itemMeta().toNBT();
+            ;
+            if (nbt.isEmpty()) bytes += 1;
+            else bytes += DataTypes.NBT.size(nbt);
             return bytes;
         }
     };
+    public static final DataType<Location> Location = new DataType<>() {
+        @Override
+        public io.github.koufu193.core.game.data.Location decode(ByteBuffer buffer) {
+            return new Location(buffer.getDouble(), buffer.getDouble(), buffer.getDouble(), buffer.getFloat(), buffer.getFloat());
+        }
+
+        @Override
+        public byte[] encode(io.github.koufu193.core.game.data.Location value) {
+            ByteArrayOutputStream output = new ByteArrayOutputStream(this.size(value));
+            output.writeBytes(Double.encode(value.x()));
+            output.writeBytes(Double.encode(value.y()));
+            output.writeBytes(Double.encode(value.z()));
+            output.writeBytes(Angle.encode(new Angle(value.yaw())));
+            output.writeBytes(Angle.encode(new Angle(value.pitch())));
+            return output.toByteArray();
+        }
+
+        @Override
+        public int size(io.github.koufu193.core.game.data.Location value) {
+            return Double.size(value.x()) + Double.size(value.y()) + Double.size(value.z())
+                    + Angle.size(new Angle(value.yaw())) + Angle.size(new Angle(value.pitch()));
+        }
+    };
+
     public abstract static class DataType<T> implements DecodableData<T>, EncodableData<T> {
         public byte[] encode(T obj, Object[] data) {
             return encode(obj);

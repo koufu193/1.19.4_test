@@ -10,11 +10,12 @@ public interface IEntity {
     int entityId();
     UUID uniqueId();
     String customName();
-    MutableNBTCompound getNBT();
+    MutableNBTCompound createMutableNBT();
     Location location();
     boolean customNameVisitable();
     void customName(String customName);
     void customNameVisitable(boolean visitable);
+    boolean onGround();
     //motions
     void teleport(@NotNull Location location);
 }

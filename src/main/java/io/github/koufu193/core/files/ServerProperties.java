@@ -1,4 +1,4 @@
-package io.github.koufu193.core.loaders;
+package io.github.koufu193.core.files;
 
 import io.github.koufu193.core.game.entities.Player;
 
@@ -13,6 +13,7 @@ public class ServerProperties {
     private Player.GameMode defaultGameMode= Player.GameMode.Survival;
     private int maxPlayers=20;
     private File levelFolder;
+    private String levelName;
     public boolean debug() {
         return debug;
     }
@@ -36,6 +37,9 @@ public class ServerProperties {
         return levelFolder;
     }
 
+    public String levelName() {
+        return levelName;
+    }
 
     public static ServerProperties fromFile(File file) {
         ServerProperties properties=new ServerProperties();
@@ -56,6 +60,7 @@ public class ServerProperties {
                 properties.defaultGameMode= Player.GameMode.fromString((String) properties1.getOrDefault("gamemode","survival"));
                 properties.maxPlayers= Integer.parseInt((String)  properties1.getOrDefault("max-players","20"));
                 properties.levelFolder = new File(file.getParent(),(String) properties1.getOrDefault("level-name","world"));
+                properties.levelName=(String) properties1.getOrDefault("level-name","world");
                 if(properties.maxPlayers<0) throw new RuntimeException("max-players must be 0 at least");
             } catch (IOException e) {
                 throw new RuntimeException(e);

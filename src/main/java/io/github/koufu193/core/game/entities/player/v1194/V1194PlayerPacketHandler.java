@@ -34,15 +34,22 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     private final PacketEncoder encoder;
     private final PacketDecoder decoder;
     private final PacketListeners listeners;
-    public V1194PlayerPacketHandler(@NotNull Player player,@NotNull AsynchronousSocketChannel channel,@NotNull PacketEncoder encoder,@NotNull PacketDecoder decoder){
+    private final Player player;
+    public V1194PlayerPacketHandler(@NotNull Player player,@NotNull PacketListeners listeners,@NotNull AsynchronousSocketChannel channel,@NotNull PacketEncoder encoder,@NotNull PacketDecoder decoder){
         this.channel=channel;
         this.encoder=encoder;
         this.decoder=decoder;
-        this.listeners=new PacketListeners(player);
+        this.listeners=listeners;
+        this.player=player;
     }
     @Override
-    public void teleport(@NotNull Location location) {
+    public void teleport(@NotNull Location location,boolean onGround) {
         sendPacket(new ClientboundSynchronizePlayerPositionPacket(location));
+        AbstractPacket teleportPacket=new ClientboundTeleportEntityPacket(player.entityId(),location,onGround);
+        player.server().onlinePlayers().forEach(player1 ->{
+            if(player1==player) return;
+            player1.packetHandler().sendPacket(teleportPacket);
+        });
     }
 
     @Override

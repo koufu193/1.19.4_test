@@ -16,6 +16,7 @@ import io.github.koufu193.core.game.entities.player.PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.player.v1194.V1194PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.player.movement.PlayerMovementHandler;
 
+import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.network.PacketDecoder;
@@ -49,6 +50,7 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     private final PlayerInventory inventory;
     private final InventoryHandler inventoryHandler;
     private final CommandManager commandManager=new CommandManager(this);
+    private final MinecraftServer server;
     public Player(MinecraftServer server, AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt, GameProfile profile) {
         super(server,entityId,nbt,server.worldFromDimension(Objects.requireNonNull(nbt.getString("Dimension"))));
         this.channel=channel;
@@ -61,10 +63,14 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
         this.totalExpPoints=(int)nbt.getOrPut("XpTotal",()->NBT.Int(0)).getValue();
         this.expLevel=(int)nbt.getOrPut("XpLevel",()->NBT.Int(0)).getValue();
         this.expProgress=(float)nbt.getOrPut("XpP",()->NBT.Float(0)).getValue();
-        this.packetHandler=new V1194PlayerPacketHandler(this,this.channel,new PacketEncoder(),new PacketDecoder());
+        this.packetHandler=new V1194PlayerPacketHandler(this,new PacketListeners(this),this.channel,new PacketEncoder(),new PacketDecoder());
         this.profile=profile;
         this.inventory=loadInventory(nbt);
         this.inventoryHandler=new InventoryHandler(this);
+        this.server=server;
+    }
+    public MinecraftServer server(){
+        return this.server;
     }
     private static PlayerInventory loadInventory(MutableNBTCompound nbt){
         int selectedSlot=(int)nbt.getOrPut("SelectedItemSlot",()->NBT.Int(0)).getValue();

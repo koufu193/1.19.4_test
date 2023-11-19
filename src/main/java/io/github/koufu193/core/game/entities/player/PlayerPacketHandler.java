@@ -23,7 +23,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 public interface PlayerPacketHandler {
-    void teleport(@NotNull Location location);
+    void teleport(@NotNull Location location,boolean onGround);
+    default void teleport(@NotNull Location location){teleport(location,true);};
     void sendExpData(int totalExpPoints,int expLevel,float expProgress);
     void sendPlayerAbilities(@NotNull Player.PlayerAbilities abilities);
     void sendDifficulty(@NotNull Difficulty difficulty,boolean locked);

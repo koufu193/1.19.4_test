@@ -22,13 +22,11 @@ import java.nio.ByteBuffer;
 import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.UUID;
 
 public class Main {
     public static void main(String[] args) {
-        StringCommandReader reader=new StringCommandReader("kickme \"he\" a a    ;l ");
-        System.out.println(reader.read());
-        System.out.println(reader.readQuotableString());
-        System.out.println(reader.readRemaining());
+        System.out.println(Integer.parseInt("+10"));
     }
 
 }

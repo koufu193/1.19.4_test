@@ -38,4 +38,9 @@ public class BoolArgumentNode extends ArgumentCommandNode<Boolean>{
     public static BoolArgumentNode bool(@NotNull String name){
         return new BoolArgumentNode(name,new HashMap<>(),null,null);
     }
+
+    @Override
+    public boolean isValidInput(@NotNull StringCommandReader reader) {
+        return reader.read().matches("^((true)|(false))$");
+    }
 }

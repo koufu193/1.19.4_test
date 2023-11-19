@@ -1,6 +1,7 @@
 package io.github.koufu193.network.handlers;
 
 
+import io.github.koufu193.core.files.PlayerDataReader;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.IntegerArgumentNode;
@@ -13,7 +14,9 @@ import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.inventory.*;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
+import io.github.koufu193.core.game.entities.Entity;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.entities.interfaces.IEntity;
 import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 import io.github.koufu193.core.game.network.listener.ExecuteCommandPacketListener;
 import io.github.koufu193.core.game.network.listener.KeepAlivePacketListener;
@@ -26,12 +29,17 @@ import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.*;
 import io.github.koufu193.network.packets.play.channels.BrandChannel;
 import io.github.koufu193.server.MinecraftServer;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public class PlayHandler implements IHandler {
@@ -49,7 +57,7 @@ public class PlayHandler implements IHandler {
     }
 
     @Override
-    public void handle(AsynchronousSocketChannel channel, MinecraftServer server) throws IOException {
+    public void handle(AsynchronousSocketChannel channel, MinecraftServer server) throws IOException, InterruptedException {
         this.server = server;
         player.abilities().mayFly(true);
         player.packetHandler().sendPacket(makeLoginPacket());
@@ -61,7 +69,7 @@ public class PlayHandler implements IHandler {
         player.packetHandler().sendPluginMessage(new BrandChannel().brand("koufu"));
         player.packetHandler().teleport(player.location());
         World world = server.world("world");
-        player.packetHandler().sendPacket(new ClientboundWorldTimePacket().fields(10L, 10L));
+        player.packetHandler().sendPacket(new ClientboundWorldTimePacket(10L, -10L));
         /*for(int x=-5;x<=5;x++) {
             for(int z=-5;z<=5;z++) {
                 if (26 < x * x + z * z) continue;
@@ -116,7 +124,30 @@ public class PlayHandler implements IHandler {
                                         }))))
                 )
         );
+        List<ClientboundUpdatePlayerInfoPacket.PlayerActions> actionsList=new ArrayList<>();
+        server.onlinePlayers().forEach(player1 -> {
+            actionsList.add(
+                    new ClientboundUpdatePlayerInfoPacket.PlayerActions(
+                            player1.uniqueId(),
+                            new ClientboundUpdatePlayerInfoPacket.AddPlayerAction(player1),
+                            new ClientboundUpdatePlayerInfoPacket.UpdateDisplayNameAction(new TextComponent(player1.name())),
+                            new ClientboundUpdatePlayerInfoPacket.ListPlayerAction(true)
+                    )
+            );
+        });
+        ClientboundUpdatePlayerInfoPacket p=new ClientboundUpdatePlayerInfoPacket(
+                actionsList.toArray(ClientboundUpdatePlayerInfoPacket.PlayerActions[]::new)
+        );
+        server.onlinePlayers().forEach(player1 -> {
+            player1.packetHandler().sendPacket(p);
+        });
+        server.onlinePlayers().forEach(player1->{
+            if(player1==player) return;
+            player1.packetHandler().sendPacket(new ClientboundJoinPlayerPacket(player));
+            player.packetHandler().sendPacket(new ClientboundJoinPlayerPacket(player1));
+        });
         player.inventory().set(PlayerInventory.PlayerArmor.HEAD, new ItemStack(Material.DIAMOND_HELMET, 1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
+        Arrays.stream(player.inventory().getAllContents()).filter(a->a.type()!=Material.AIR).forEach(a-> System.out.println(a.type().id()));
         player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket((byte) 0, 0, new InventoryView(player.inventory()), null));
         player.setCommands(rootNode);
         AbstractPacket pak = null;
@@ -126,10 +157,34 @@ public class PlayHandler implements IHandler {
         listeners.add(new UndefinedPacketAlerter());
         new KeepAliveHandler(player).handleAsync();
         while ((pak = player.packetHandler().handlePacket()) != null && player.isOnline()) {
+            if(pak instanceof ServerboundMovementPacket packet){
+                Location o=player.location();
+                player.location(packet.toLocation(player.location()),packet.onGround());
+                AbstractPacket packet1;
+                try {
+                    packet1 = make(player, packet, o);
+                }catch (IllegalArgumentException e){
+                    packet1=new ClientboundTeleportEntityPacket(player);
+                }
+                AbstractPacket finalPacket = packet1;
+                AbstractPacket oa=null;
+                if(!(packet instanceof ServerboundSetPlayerPositionPacket)) oa=new ClientboundSetHeadRotationPacket(player);
+                AbstractPacket finalOa = oa;
+                server.onlinePlayers().forEach(player1 -> {
+                    if(player1==player) return;
+                    player1.packetHandler().sendPacket(finalPacket);
+                    if(finalOa !=null) player1.packetHandler().sendPacket(finalOa);
+                });
+            }
         }
         while (player.isOnline()) {
         }
         channel.close();
+    }
+    private AbstractPacket make(@NotNull IEntity entity, @NotNull ServerboundMovementPacket packet,@NotNull Location before){
+        if(packet instanceof ServerboundSetPlayerRotationPacket) return new ClientboundUpdateEntityRotationPacket(entity);
+        if(packet instanceof ServerboundSetPlayerPositionPacket) return new ClientboundUpdateEntityPositionPacket(entity,before);
+        return new ClientboundUpdateEntityPositionAndRotationPacket(entity,before);
     }
 
     private AbstractPacket makeLoginPacket() {

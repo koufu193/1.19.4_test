@@ -1,4 +1,4 @@
-package io.github.koufu193.core.loaders;
+package io.github.koufu193.core.files;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

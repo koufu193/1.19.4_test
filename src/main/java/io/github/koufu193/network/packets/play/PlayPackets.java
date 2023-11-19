@@ -36,10 +36,20 @@ public class PlayPackets implements IPackets {
             reg(ClientboundOpenScreenPacket::new);
             reg(ClientboundOpenHorseScreenPacket::new);
             reg(ClientboundCloseContainerPacket::new);
+            reg(ClientboundJoinPlayerPacket::new);
+            reg(ClientboundUpdateEntityPositionAndRotationPacket::new);
+            reg(ClientboundUpdateEntityPositionPacket::new);
+            reg(ClientboundUpdateEntityRotationPacket::new);
+            reg(ClientboundTeleportEntityPacket::new);
+            reg(ClientboundSetHeadRotationPacket::new);
         }
 
         private void reg(Supplier<AbstractPacket> supp) {
-            put(supp.get().packetId(), supp);
+            AbstractPacket instance=supp.get();
+            if(containsKey(instance.packetId())) {
+                System.out.println(instance.getClass().getSimpleName()+" "+get(instance.packetId()).get().getClass().getSimpleName());
+            }
+            put(instance.packetId(),supp);
         }
     };
     private static final Map<Integer, Supplier<AbstractPacket>> serverboundPackets = new HashMap<>() {

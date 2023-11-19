@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 
 public final class MinecraftServerLauncher {
     private AsynchronousServerSocketChannel socketChannel;
+    MinecraftServer server=new MinecraftServer(new File("./server"));
     public void start() throws IOException {
         if(socketChannel!=null) throw new IllegalStateException("server has already initialized");
         socketChannel=AsynchronousServerSocketChannel.open().bind(new InetSocketAddress("127.0.0.1",25565));
@@ -20,16 +21,15 @@ public final class MinecraftServerLauncher {
     }
     private void accept(AsynchronousServerSocketChannel channel){
         if(channel==null) throw new IllegalStateException("server has not initialized");
-        MinecraftServer server=new MinecraftServer(new File("./server"));
         channel.accept(null,new CompletionHandler<AsynchronousSocketChannel, Void>() {
             @Override
             public void completed(AsynchronousSocketChannel result, Void attachment) {
+                accept(channel);
                 try (result) {
                     new HandshakeHandler().handle(result,server);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                accept(channel);
             }
 
             @Override

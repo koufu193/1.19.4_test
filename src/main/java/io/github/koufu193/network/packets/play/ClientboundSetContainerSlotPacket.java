@@ -21,6 +21,6 @@ public class ClientboundSetContainerSlotPacket extends InventoryPacket {
 
     @Override
     public int packetId() {
-        return 0x12;
+        return 0x14;
     }
 }

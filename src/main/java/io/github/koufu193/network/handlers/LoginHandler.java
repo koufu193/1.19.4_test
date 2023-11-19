@@ -18,10 +18,12 @@ public class LoginHandler implements IHandler{
     @Override
     public void handle(@NotNull AsynchronousSocketChannel channel,@NotNull MinecraftServer server) throws IOException, ExecutionException, InterruptedException, TimeoutException {
         ServerboundLoginStartPacket packet = (ServerboundLoginStartPacket) PacketDecoder.getDecoder().decode(channel, LoginPackets.getPackets());
-        Player player=server.loadPlayer(packet.toProfile(),channel);
+        Player player=server.join(packet.toProfile(),channel);
+        System.out.printf("uuid:%s name:%s logging%n",player.uniqueId(),player.name());
         startCompress(player,server.serverProperties().networkCompressionThreshold());
         player.packetHandler().sendPacket(new ClientboundLoginSuccessPacket(packet.toProfile()));
         loginSuccess(player,server);
+        server.quit(player);
     }
     private void loginSuccess(@NotNull Player player, @NotNull MinecraftServer server) throws IOException, ExecutionException, InterruptedException, TimeoutException {
         new PlayHandler(player).handle(player.channel(),server);
