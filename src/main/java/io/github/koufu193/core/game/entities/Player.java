@@ -3,6 +3,7 @@ package io.github.koufu193.core.game.entities;
 import io.github.koufu193.core.game.commands.Command;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.data.GameProfile;
+import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.core.game.data.component.TextComponent;
@@ -10,6 +11,7 @@ import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
+import io.github.koufu193.core.game.entities.player.ChunkHandler;
 import io.github.koufu193.core.game.entities.player.CommandManager;
 import io.github.koufu193.core.game.entities.player.InventoryHandler;
 import io.github.koufu193.core.game.entities.player.PlayerPacketHandler;
@@ -18,14 +20,14 @@ import io.github.koufu193.core.game.entities.player.movement.PlayerMovementHandl
 
 import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.world.World;
-import io.github.koufu193.exceptions.CommandException;
+import io.github.koufu193.core.properties.exceptions.CommandException;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
 import io.github.koufu193.server.MinecraftServer;
+import io.github.koufu193.util.NBTUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jglrxavpok.hephaistos.nbt.NBT;
-import org.jglrxavpok.hephaistos.nbt.NBTCompound;
-import org.jglrxavpok.hephaistos.nbt.NBTType;
+import org.jetbrains.annotations.Nullable;
+import org.jglrxavpok.hephaistos.nbt.*;
 import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 
 import java.io.IOException;
@@ -33,6 +35,7 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Player extends Entity implements io.github.koufu193.core.game.entities.interfaces.IPlayer {
     private final AsynchronousSocketChannel channel;
@@ -45,18 +48,19 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     protected float expProgress;
     private GameProfile profile;
     private InventoryView openingView;
+    private Location lastDeathLocation;
     private final PlayerPacketHandler packetHandler;
     private final PlayerMovementHandler movementHandler=new PlayerMovementHandler(this);
     private final PlayerInventory inventory;
     private final InventoryHandler inventoryHandler;
     private final CommandManager commandManager=new CommandManager(this);
-    private final MinecraftServer server;
+    private final ChunkHandler chunkHandler=new ChunkHandler(this);
     public Player(MinecraftServer server, AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt, GameProfile profile) {
-        super(server,entityId,nbt,server.worldFromDimension(Objects.requireNonNull(nbt.getString("Dimension"))));
+        super(server,entityId,nbt,server.world(readWorldUUID(nbt)));
         this.channel=channel;
         this.gameMode=GameMode.fromId((int)nbt.getOrPut("playerGameType",()->NBT.Int(server.serverProperties().defaultGameMode().id())).getValue());
         Integer preGameMode=nbt.getInt("previousPlayerGameType");
-        this.previousGameMode=preGameMode!=null?GameMode.fromId(preGameMode):null;
+        this.previousGameMode=preGameMode!=null?GameMode.fromId(preGameMode):GameMode.Undefined;
         if(nbt.getCompound("abilities")==null) nbt.put("abilities",NBT.Compound(a->{}));
         this.abilities=new PlayerAbilities(nbt.getCompound("abilities"));
         nbt.put("abilities",this.abilities.nbt());
@@ -67,18 +71,25 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
         this.profile=profile;
         this.inventory=loadInventory(nbt);
         this.inventoryHandler=new InventoryHandler(this);
-        this.server=server;
+        if(nbt.containsKey("lastDeathLocation")){
+            NBTCompound lastDeathNBT=nbt.getCompound("lastDeathLocation");
+            this.lastDeathLocation=NBTUtils.convertIntPositionToLocation(lastDeathNBT.getList("pos")).world(server.world(new Identifier(lastDeathNBT.getString("dimension"))));
+        }
     }
-    public MinecraftServer server(){
-        return this.server;
+
+    public ChunkHandler chunkHandler() {
+        return chunkHandler;
+    }
+
+    private static UUID readWorldUUID(@NotNull NBTCompoundLike nbt){
+        return new UUID(nbt.getLong("WorldUUIDMost"),nbt.getLong("WorldUUIDLeast"));
     }
     private static PlayerInventory loadInventory(MutableNBTCompound nbt){
         int selectedSlot=(int)nbt.getOrPut("SelectedItemSlot",()->NBT.Int(0)).getValue();
         PlayerInventory playerInventory=new PlayerInventory();
-        Collection<? extends NBTCompound> inventoryNBT=(Collection<? extends NBTCompound>)nbt.getOrPut("Inventory",()->NBT.List(NBTType.TAG_Compound,new ArrayList<>())).getValue();
-        inventoryNBT.forEach(nbtCompound->{
-            playerInventory.set(nbtCompound.getByte("Slot"),makeItemStack(nbtCompound));
-        });
+        Collection<? extends NBTCompound> inventoryNBT=((NBTList<NBTCompound>)nbt.getOrPut("Inventory",()->NBT.List(NBTType.TAG_Compound,new ArrayList<>()))).getValue();
+        inventoryNBT.forEach(nbtCompound-> playerInventory.set(nbtCompound.getByte("Slot"),makeItemStack(nbtCompound)));
+        playerInventory.selectedSlot(selectedSlot);
         return playerInventory;
     }
     private static ItemStack makeItemStack(NBTCompound nbt){
@@ -88,11 +99,13 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
         return new ItemStack(material,amount, ItemMeta.defaultItemMeta(material,compound));
     }
 
+    @NotNull
     @Override
     public GameMode gameMode() {
         return this.gameMode;
     }
 
+    @NotNull
     @Override
     public GameMode previousGameMode() {
         return this.previousGameMode;
@@ -101,6 +114,7 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     @Override
     public void gameMode(@NotNull GameMode gameMode) {
         if(this.gameMode==gameMode) return;
+        if(gameMode==GameMode.Undefined) throw new IllegalArgumentException("gameMode must not be Undefined");
         this.previousGameMode=this.gameMode;
         this.gameMode=gameMode;
         this.nbt.setInt("playerGameType",this.gameMode.id());
@@ -172,7 +186,7 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
 
     @Override
     public int viewDistance() {
-        return this.property.viewDistance();
+        return this.property!=null?this.property.viewDistance():server.serverProperties().viewDistance();
     }
 
     @Override
@@ -187,7 +201,7 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
         return this.abilities;
     }
 
-    protected void property(Property property) {
+    public void property(Property property) {
         this.property = property;
     }
 
@@ -283,8 +297,14 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
         }
     }
 
+    @Nullable
+    @Override
+    public Location lastDeathLocation() {
+        return null;
+    }
+
     public enum GameMode{
-        Survival(0),Creative(1),Adventure(2),Spectator(3);
+        Survival(0),Creative(1),Adventure(2),Spectator(3),Undefined(-1);
         private final int id;
         GameMode(int id){
             this.id=id;

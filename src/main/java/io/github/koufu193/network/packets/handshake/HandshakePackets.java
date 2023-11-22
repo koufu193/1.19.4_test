@@ -1,6 +1,6 @@
 package io.github.koufu193.network.packets.handshake;
 
-import io.github.koufu193.exceptions.UndefinedPacketIdException;
+import io.github.koufu193.core.properties.exceptions.UndefinedPacketIdException;
 import io.github.koufu193.network.IPackets;
 import io.github.koufu193.network.packets.AbstractPacket;
 

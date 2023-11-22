@@ -88,6 +88,13 @@ public class Entity implements IEntity {
     @Override
     public void teleport(@NotNull Location location) {
     }
+
+    @NotNull
+    @Override
+    public MinecraftServer server() {
+        return this.server;
+    }
+
     public void onGround(boolean onGround){
         this.onGround=onGround;
     }

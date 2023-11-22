@@ -1,14 +1,9 @@
 package io.github.koufu193.core.game.commands;
 
-import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.context.CommandContext;
-import io.github.koufu193.core.game.commands.nodes.CommandNode;
 import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
-import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.ArgumentCommandNode;
-import io.github.koufu193.core.game.entities.interfaces.IPlayer;
-import io.github.koufu193.exceptions.CommandException;
+import io.github.koufu193.core.properties.exceptions.CommandException;
 import io.github.koufu193.util.StringCommandReader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

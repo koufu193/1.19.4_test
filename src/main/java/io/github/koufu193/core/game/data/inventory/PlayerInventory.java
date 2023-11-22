@@ -36,6 +36,8 @@ public class PlayerInventory implements Inventory{
     public InventoryView asView(){
         return this.VIEW;
     }
+
+
     @NotNull
     @Override
     public ItemStack get(int slotId) {

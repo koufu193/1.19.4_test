@@ -26,10 +26,12 @@ public record PlayerDataReader(MinecraftServer server, File playerDataFolder) {
     private NBTCompound make(UUID uuid){
         Location spawnLocation=server.defaultSpawnWorld().defaultSpawnLocation();
         return NBT.Compound((compound)->{
-            compound.put("Dimension",NBT.String("minecraft:overworld"));
+            compound.put("Dimension",NBT.String(String.valueOf(spawnLocation.world().nameId())));
             compound.put("UUID",NBTUtils.convertUUIDtoIntsNBT(uuid));
             compound.put("Pos", NBTUtils.toDoubleNBTList(spawnLocation.x(),spawnLocation.y(),spawnLocation.z()));
             compound.put("Rotation",NBTUtils.toFloatNBTList(spawnLocation.yaw(),spawnLocation.pitch()));
+            compound.put("WorldUUIDMost",NBT.Long(spawnLocation.world().uid().uid().getMostSignificantBits()));
+            compound.put("WorldUUIDLeast",NBT.Long(spawnLocation.world().uid().uid().getLeastSignificantBits()));
         });
     }
     public void write(@NotNull UUID uuid,@NotNull NBTCompound nbt){
@@ -40,7 +42,7 @@ public record PlayerDataReader(MinecraftServer server, File playerDataFolder) {
             throw new RuntimeException(e);
         }
     }
-    public static PlayerDataReader fromWorldFolder(MinecraftServer server, File folder){
-        return new PlayerDataReader(server,new File(folder,"playerdata"));
+    public static PlayerDataReader fromWorldFolder(MinecraftServer server, File worldFolder){
+        return new PlayerDataReader(server,new File(worldFolder,"playerdata"));
     }
 }

@@ -30,6 +30,9 @@ public final class NBTUtils {
     public static Location convertDoublePositionToLocation(@NotNull NBTList<NBT> pos){
         return new Location((Double) pos.get(0).getValue(),(Double)pos.get(1).getValue(),(Double)pos.get(2).getValue());
     }
+    public static Location convertIntPositionToLocation(@NotNull NBTList<NBT> pos){
+        return new Location((Integer) pos.get(0).getValue(),(Integer)pos.get(1).getValue(),(Integer)pos.get(2).getValue());
+    }
     public static Location convertFloatRotationToLocation(@NotNull NBTList<NBT> rotation){
         return new Location(0,0,0,(Float)rotation.get(0).getValue(),(Float)rotation.get(1).getValue());
     }

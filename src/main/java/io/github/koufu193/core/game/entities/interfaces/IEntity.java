@@ -1,6 +1,7 @@
 package io.github.koufu193.core.game.entities.interfaces;
 
 import io.github.koufu193.core.game.data.Location;
+import io.github.koufu193.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 
@@ -18,4 +19,6 @@ public interface IEntity {
     boolean onGround();
     //motions
     void teleport(@NotNull Location location);
+    @NotNull
+    MinecraftServer server();
 }

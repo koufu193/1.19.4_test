@@ -8,6 +8,7 @@ import io.github.koufu193.core.game.data.inventory.HorseInventory;
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.entities.interfaces.IEntity;
 import io.github.koufu193.core.game.entities.player.PlayerPacketHandler;
 import io.github.koufu193.core.game.network.listener.PacketListener;
 import io.github.koufu193.core.game.network.listener.PacketListeners;
@@ -60,6 +61,11 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     @Override
     public void sendPlayerAbilities(@NotNull Player.PlayerAbilities abilities) {
         sendPacket(new ClientboundPlayerAbilitiesPacket(abilities));
+    }
+
+    @Override
+    public void entityTeleport(@NotNull IEntity entity, @NotNull Location location,boolean onGround) {
+        sendPacket(new ClientboundTeleportEntityPacket(entity.entityId(),location,onGround));
     }
 
     @Override

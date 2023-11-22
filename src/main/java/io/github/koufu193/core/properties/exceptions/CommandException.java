@@ -1,4 +1,4 @@
-package io.github.koufu193.exceptions;
+package io.github.koufu193.core.properties.exceptions;
 
 import io.github.koufu193.core.game.data.component.TextComponent;
 import org.jetbrains.annotations.NotNull;

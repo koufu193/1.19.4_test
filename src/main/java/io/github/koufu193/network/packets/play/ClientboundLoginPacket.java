@@ -1,10 +1,80 @@
 package io.github.koufu193.network.packets.play;
 
+import io.github.koufu193.core.files.NBTFiles;
+import io.github.koufu193.core.files.ServerProperties;
+import io.github.koufu193.core.game.data.Identifier;
+import io.github.koufu193.core.game.data.Location;
+import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.entities.interfaces.IPlayer;
+import io.github.koufu193.core.game.gamerule.GameRules;
+import io.github.koufu193.core.game.world.World;
+import io.github.koufu193.core.game.world.generator.WorldGenSettings;
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
+import io.github.koufu193.server.MinecraftServer;
+import org.bukkit.WorldCreator;
+import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jglrxavpok.hephaistos.nbt.NBT;
+
+import java.util.Objects;
+import java.util.Optional;
 
 public class ClientboundLoginPacket extends AbstractPacket {
+    ClientboundLoginPacket(){}
+    public ClientboundLoginPacket(@NotNull IPlayer player){
+        this(player,player.server());
+    }
+    public ClientboundLoginPacket(@NotNull IPlayer player,@NotNull MinecraftServer server){
+        this(player,server,server.serverProperties(),server.gameRules(),player.world(),player.world().worldGenSettings(),player.lastDeathLocation());
+    }
+    public ClientboundLoginPacket(@NotNull IPlayer player, @NotNull MinecraftServer server , @NotNull ServerProperties properties, @NotNull GameRules gameRules, @NotNull World world, @NotNull WorldGenSettings genSettings,@Nullable Location lastDeathLocation){
+        this(
+                player.entityId(),
+                properties.hardcore(),
+                (byte) player.gameMode().id(),
+                (byte) player.previousGameMode().id(),
+                server.worlds().stream().map(World::nameId).toArray(Identifier[]::new),
+                NBTFiles.registryCodec(),
+                world.dimensionType().id(),
+                world.nameId(),
+                genSettings.hashedSeed(),
+                properties.maxPlayers(),
+                player.viewDistance(),
+                player.viewDistance(),
+                false,
+                gameRules.doImmediateRespawn.value(),
+                world.debug(),
+                world.flat(),
+                lastDeathLocation!=null,
+                lastDeathLocation!=null?lastDeathLocation.world().nameId():null,
+                lastDeathLocation
+        );
+    }
+    public ClientboundLoginPacket(
+            int entityId,
+            boolean hardcore,
+            byte gameMode,
+            byte prevGameMode,
+            @NotNull Identifier[] dimensions,
+            @NotNull NBT registryCodec,
+            @NotNull Identifier dimensionType,
+            @NotNull Identifier dimensionName,
+            long hashedSeed,
+            int maxPlayers,
+            int viewDistance,
+            int simulationsDistance,
+            boolean reduceDebugInfo,
+            boolean enableRespawnScreen,
+            boolean debug,
+            boolean flat,
+            boolean hasDeathLocation,
+            @Nullable Identifier deathDimensionName,
+            @Nullable Location deathLocation){
+        fields(entityId,hardcore,gameMode,prevGameMode,dimensions,registryCodec,dimensionType,dimensionName,hashedSeed,maxPlayers,viewDistance,simulationsDistance,reduceDebugInfo,enableRespawnScreen,debug,flat,hasDeathLocation,deathDimensionName,deathLocation);
+    }
     @Override
     public PacketFormat format() {
         return PacketFormat.of(

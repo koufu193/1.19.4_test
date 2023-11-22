@@ -17,7 +17,7 @@ public final class ChunkLoader {
 
     public ChunkLoader(World world) {
         this.world = world;
-        this.regionFolder =new File(world.worldFolder(),"regions");
+        this.regionFolder =new File(world.worldFolder(),"region");
         if(!regionFolder.exists()) regionFolder.mkdirs();
     }
 

@@ -7,6 +7,7 @@ import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.core.game.entities.interfaces.IEntity;
 import io.github.koufu193.core.game.network.listener.PacketListener;
 import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.world.chunk.Chunk;
@@ -23,6 +24,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 public interface PlayerPacketHandler {
+    void entityTeleport(@NotNull IEntity entity,@NotNull Location location,boolean onGround);
+    default void entityTeleport(@NotNull IEntity entity,@NotNull Location location){
+        entityTeleport(entity,location,entity.onGround());
+    }
     void teleport(@NotNull Location location,boolean onGround);
     default void teleport(@NotNull Location location){teleport(location,true);};
     void sendExpData(int totalExpPoints,int expLevel,float expProgress);
