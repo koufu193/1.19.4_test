@@ -6,6 +6,7 @@ import io.github.koufu193.util.ConvertibleToNBTCompound;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
+import org.jglrxavpok.hephaistos.nbt.NBTCompoundLike;
 
 import java.util.*;
 
@@ -20,7 +21,7 @@ public final class WorldGenSettings implements ConvertibleToNBTCompound {
     private final boolean generateFeatures;
     private final long hashedSeed;
     private final Map<Identifier, NBTDimension> dimensions;
-    public WorldGenSettings(@NotNull NBTCompound nbt){
+    public WorldGenSettings(@NotNull NBTCompoundLike nbt){
         this(
                 Objects.requireNonNull(nbt.getLong(WorldGenSettings.SEED),"Seed Not Found"),
                 Objects.requireNonNull(nbt.getBoolean(WorldGenSettings.BONUS_CHEST),"Bonus Chest Not Found"),
@@ -67,7 +68,8 @@ public final class WorldGenSettings implements ConvertibleToNBTCompound {
             compound.put(WorldGenSettings.GENERATE_FEATURES, NBT.Boolean(this.generateFeatures));
             compound.put(
                     WorldGenSettings.DIMENSIONS,
-                    NBT.Compound(dimensions -> this.dimensions.forEach((id, NBTDimension) -> dimensions.put(String.valueOf(id), NBTDimension.toCompound()))
+                    NBT.Compound(
+                            dimensions -> this.dimensions.forEach((id, NBTDimension) -> dimensions.put(String.valueOf(id), NBTDimension.toCompound()))
                     )
             );
         });

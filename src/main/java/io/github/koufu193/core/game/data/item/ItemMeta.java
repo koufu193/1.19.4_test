@@ -3,6 +3,7 @@ package io.github.koufu193.core.game.data.item;
 import io.github.koufu193.core.game.data.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
+import org.jglrxavpok.hephaistos.nbt.NBTCompoundLike;
 
 public interface ItemMeta extends Cloneable{
     boolean isTypeOf(@NotNull Material material);

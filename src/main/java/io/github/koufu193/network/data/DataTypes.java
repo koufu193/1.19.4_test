@@ -161,7 +161,7 @@ public final class DataTypes {
             return java.lang.Long.BYTES * 2;
         }
     };
-    public static final DataType<NBT> NBT = new DataType<>() {
+    public static final DataType<NBT> NBT = new DataType<NBT>() {
         @Override
         public org.jglrxavpok.hephaistos.nbt.NBT decode(ByteBuffer buffer) {
             try (NBTReader reader = new NBTReader(new InputStream() {
@@ -194,7 +194,6 @@ public final class DataTypes {
                 throw new RuntimeException(e);
             }
         }
-
         @Override
         public int size(org.jglrxavpok.hephaistos.nbt.NBT value) {
             try {
@@ -622,7 +621,7 @@ public final class DataTypes {
             return encode(obj);
         }
 
-        public final byte[] encodeObj(Object obj, Object[] data) {
+        public byte[] encodeObj(Object obj, Object[] data) {
             return encode((T) obj, data);
         }
 
@@ -630,7 +629,7 @@ public final class DataTypes {
             return decode(buffer);
         }
 
-        public final byte[] encodeObj(Object obj) {
+        public byte[] encodeObj(Object obj) {
             return encode((T) obj);
         }
 

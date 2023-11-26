@@ -122,6 +122,7 @@ public class PlayHandler implements IHandler {
             player.packetHandler().sendPacket(new ClientboundJoinPlayerPacket(player1));
         });
         player.inventory().set(PlayerInventory.PlayerArmor.HEAD, new ItemStack(Material.DIAMOND_HELMET, 1, ItemMeta.defaultItemMeta(Material.DIAMOND_HELMET)));
+        player.inventory().set(3,new ItemStack(Material.DEBUG_STICK,1,ItemMeta.defaultItemMeta(Material.DEBUG_STICK)));
         Arrays.stream(player.inventory().getAllContents()).filter(a->a.type()!=Material.AIR).forEach(a-> System.out.println(a.type().id()));
         player.packetHandler().sendPacket(new ClientboundSetContainerContentsPacket((byte) 0, 0, new InventoryView(player.inventory()), null));
         player.setCommands(rootNode);

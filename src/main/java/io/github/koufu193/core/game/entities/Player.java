@@ -28,7 +28,6 @@ import io.github.koufu193.util.NBTUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jglrxavpok.hephaistos.nbt.*;
-import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -53,7 +52,7 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     private final CommandManager commandManager = new CommandManager(this);
     private final ChunkSender chunkSender = new ChunkSender(this);
 
-    public Player(MinecraftServer server, AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt, GameProfile profile) {
+    public Player(MinecraftServer server, AsynchronousSocketChannel channel, int entityId,@NotNull NBTCompoundLike nbt,@NotNull GameProfile profile) {
         super(server, entityId, nbt, server.world(readWorldUUID(nbt)));
         this.channel = channel;
         this.gameMode = GameMode.fromId(

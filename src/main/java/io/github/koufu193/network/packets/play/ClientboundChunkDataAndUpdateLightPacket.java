@@ -1,5 +1,6 @@
 package io.github.koufu193.network.packets.play;
 
+import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.ChunkSection;
@@ -16,6 +17,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.mca.AnvilException;
 import org.jglrxavpok.hephaistos.mca.ChunkColumn;
 import org.jglrxavpok.hephaistos.nbt.NBT;
+import org.jglrxavpok.hephaistos.nbt.NBTCompound;
+import org.jglrxavpok.hephaistos.nbt.NBTCompoundLike;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -45,8 +48,15 @@ public class ClientboundChunkDataAndUpdateLightPacket extends AbstractPacket {
                             data.write(DataTypes.NBT.encode(NBT.Compound(root -> {
                                 root.setLongArray("MOTION_BLOCKING", chunk.getMotionBlocking());
                             })));
-                            writeDataStructure(chunk, data);
-                            data.write(DataTypes.VarInt.encode(0));
+                            List<BlockEntityData> tileBlocks=writeDataStructure(chunk, data);
+                            data.write(DataTypes.VarInt.encode(tileBlocks.size()));
+                            //must fix
+                            tileBlocks.forEach(block->{
+                                output.write(block.packedXZ());
+                                output.writeBytes(DataTypes.Short.encode(block.y()));
+                                output.writeBytes(DataTypes.VarInt.encode(block.type()));
+                                output.writeBytes(DataTypes.NBT.encode((NBTCompound)block.data()));
+                            });
                             //light
                             data.write((byte) 0);
                             data.write(DataTypes.Light.encode(LightData.from(chunk)));
@@ -74,8 +84,9 @@ public class ClientboundChunkDataAndUpdateLightPacket extends AbstractPacket {
         return 0x24;
     }
 
-    private static void writeDataStructure(Chunk chunk, DataOutputStream output) throws IOException{
+    private static List<BlockEntityData> writeDataStructure(Chunk chunk, DataOutputStream output) throws IOException{
         ByteArrayOutputStream sectionOutput = new ByteArrayOutputStream();
+        List<BlockEntityData> tileBlocks=new ArrayList<>();
         for (ChunkSection section:chunk.sections()) {
             Material[] blocks=blocksToMaterials(section.blocks());
             int nonAirBlockCount = countNonAirBlocks(blocks);
@@ -87,10 +98,15 @@ public class ClientboundChunkDataAndUpdateLightPacket extends AbstractPacket {
             else new DirectPalette(blocks).write(sectionOutput);
             //biomes
             new SingleValuePalette((int)(Math.random()*60)).write(sectionOutput);
+            tileBlocks.addAll(Arrays.stream(section.blocks()).filter(block->!block.nbt().isEmpty()).map(block -> {
+                Location location=block.location();
+                return new BlockEntityData((int)location.x(),(int)location.y(),(int)location.z(),block.type().blockId(), block.nbt());
+            }).toList());
         }
         byte[] data = sectionOutput.toByteArray();
         output.write(DataTypes.VarInt.encode(data.length));
         output.write(data);
+        return tileBlocks;
     }
 
 
@@ -109,8 +125,8 @@ public class ClientboundChunkDataAndUpdateLightPacket extends AbstractPacket {
         return new HashSet<>(Arrays.asList(blocks));
     }
 
-    private record BlockEntityData(byte packedXZ, short y, int type, NBT data) {
-        public BlockEntityData(int x, int y, int z, int type, NBT data) {
+    private record BlockEntityData(byte packedXZ, short y, int type,@NotNull NBTCompoundLike data) {
+        public BlockEntityData(int x, int y, int z, int type,@NotNull NBTCompoundLike data) {
             this((byte) (((x & 15) << 4) | (z & 15)), (short) y, type, data);
         }
     }

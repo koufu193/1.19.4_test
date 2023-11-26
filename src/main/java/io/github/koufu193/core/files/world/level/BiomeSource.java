@@ -6,24 +6,25 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
+import org.jglrxavpok.hephaistos.nbt.NBTCompoundLike;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public record BiomeSource(@NotNull Identifier type, @Nullable Identifier preset) implements ConvertibleToNBTCompound {
     private static final String TYPE="type";
     private static final String PRESET ="preset";
     public static final Identifier FLAT=new Identifier("minecraft:flat");
     public static final Identifier DEBUG=new Identifier("minecraft:debug");
-    public BiomeSource(@NotNull NBTCompound nbt){
+    public BiomeSource(@NotNull NBTCompoundLike nbt){
         this(
                 new Identifier(Objects.requireNonNull(nbt.getString(BiomeSource.TYPE),"Type Not Found")),
                 parsePreset(nbt)
         );
     }
     @Nullable
-    private static Identifier parsePreset(@NotNull NBTCompound nbt){
-        if(!nbt.containsKey(BiomeSource.PRESET)) return null;
-        return new Identifier(nbt.getString(BiomeSource.PRESET));
+    private static Identifier parsePreset(@NotNull NBTCompoundLike nbt){
+        return Optional.ofNullable(nbt.getString(BiomeSource.PRESET)).map(Identifier::new).orElse(null);
     }
     @Override
     public NBTCompound toCompound() {

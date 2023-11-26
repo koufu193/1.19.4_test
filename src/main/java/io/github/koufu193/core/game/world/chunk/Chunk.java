@@ -1,10 +1,9 @@
 package io.github.koufu193.core.game.world.chunk;
 
 import io.github.koufu193.core.game.world.World;
+import io.github.koufu193.core.game.world.chunk.block.Block;
 import org.jetbrains.annotations.NotNull;
-import org.jglrxavpok.hephaistos.nbt.NBT;
-import org.jglrxavpok.hephaistos.nbt.NBTCompoundLike;
-import org.jglrxavpok.hephaistos.nbt.NBTList;
+import org.jglrxavpok.hephaistos.nbt.*;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -25,6 +24,7 @@ public class Chunk {
         this.minYSection = Objects.requireNonNull(nbt.getInt("yPos"), "'yPos' not found");
         this.sections = loadChunkSections(world, this.chunkX, this.chunkZ, this.minYSection, maxYSection, Objects.requireNonNull(nbt.getList("sections"), "'sections' not found"));
         this.motionBlocking = Objects.requireNonNull(Objects.requireNonNull(nbt.getCompound("Heightmaps")).getLongArray("MOTION_BLOCKING")).copyArray();
+        applyBlockEntities(Objects.requireNonNullElseGet(nbt.getList("block_entities"),()->new NBTList<NBTCompound>(NBTType.TAG_Compound)));
     }
 
     public Chunk(@NotNull World world, int chunkX, int chunkZ) {
@@ -48,8 +48,13 @@ public class Chunk {
     public int chunkZ() {
         return this.chunkZ;
     }
-
-
+    public Block block(int x,int y,int z){
+        return blockByRelativeLocation(x&0x0f,y,z&0x0f);
+    }
+    private Block blockByRelativeLocation(int x,int y,int z){
+        ChunkSection section=sections[(y-minYSection*16)/16];
+        return section.block(x,y-section.getSectionY()*16,z);
+    }
     public long[] getMotionBlocking() {
         return Arrays.copyOf(this.motionBlocking, this.motionBlocking.length);
     }
@@ -61,6 +66,15 @@ public class Chunk {
 
     public int sectionSize() {
         return this.sections.length;
+    }
+    private void applyBlockEntities(@NotNull NBTList<?> blockEntities){
+        blockEntities.forEach(nbt->{
+            NBTCompound compound=(NBTCompound)nbt;
+            int x=compound.getInt("x");
+            int y=compound.getInt("y");
+            int z=compound.getInt("z");
+            block(x,y,z).nbt(compound);
+        });
     }
 
     private static ChunkSection[] loadChunkSections(@NotNull World world, int chunkX, int chunkZ, int minYSection, int maxYSection, @NotNull NBTList<NBT> sectionsNbt) {

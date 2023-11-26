@@ -45,6 +45,12 @@ public final class ChunkSection {
     public byte getSectionY() {
         return sectionY;
     }
+    public Block block(int x,int y,int z){
+        if(x<0||15<x) throw new IllegalArgumentException("x must be between 0 and 15");
+        if(y<0||15<y) throw new IllegalArgumentException("y must be between 0 and 15");
+        if(z<0||15<z) throw new IllegalArgumentException("z must be between 0 and 15");
+        return this.blocks[(x<<8)|(y<<4)|z];
+    }
     @NotNull
     public Block[] blocks(){
         return Arrays.copyOf(this.blocks,this.blocks.length);
@@ -61,7 +67,7 @@ public final class ChunkSection {
                 for(int z=0;z<16;z++){
                     int index=(x<<8)|(y<<4)|(z);
                     int v= (int) storage.read();
-                    blocks[index]=new Block(baseLocation.clone().add(x,y,z),metaPalette[v].material());
+                    blocks[index]=new Block(baseLocation.clone().add(x,y,z),metaPalette[v].material(),metaPalette[v].toCompound());
                 }
             }
         }
@@ -73,6 +79,7 @@ public final class ChunkSection {
             Material material=Material.fromId(
                     Objects.requireNonNull(((NBTCompoundLike)palette.get(i)).getString("Name"),"'Name' not found")
             );
+            NBTCompound nbt=Objects.requireNonNullElse (((NBTCompoundLike)palette.get(i)).getCompound("Properties"),NBTCompound.EMPTY);
             metaPalette[i]=new BlockMeta() {
                 @Override
                 public Material material() {
@@ -93,7 +100,7 @@ public final class ChunkSection {
             for(int y=0;y<16;y++){
                 for(int z=0;z<16;z++){
                     int index=(x<<8)|(y<<4)|(z);
-                    blocks[index]=new Block(baseLocation.clone().add(x,y,z),Material.AIR);
+                    blocks[index]=new Block(baseLocation.clone().add(x,y,z),Material.AIR,NBTCompound.EMPTY);
                 }
             }
         }

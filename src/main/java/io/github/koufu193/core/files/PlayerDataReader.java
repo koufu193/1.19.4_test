@@ -45,10 +45,10 @@ public record PlayerDataReader(@NotNull MinecraftServer server,@NotNull Path pla
      * @param playerUuid 書き込むプレーヤーのUUID
      * @param playerNBT 書き込むデータ
      */
-    public void writePlayerNBT(@NotNull UUID playerUuid, @NotNull NBTCompound playerNBT){
+    public void writePlayerNBT(@NotNull UUID playerUuid, @NotNull NBTCompoundLike playerNBT){
         Path playerFile=getPlayerNBTFile(playerUuid);
         try (NBTWriter writer = new NBTWriter(playerFile, CompressedProcesser.GZIP)) {
-            writer.writeNamed("",playerNBT);
+            writer.writeNamed("",playerNBT.toCompound());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

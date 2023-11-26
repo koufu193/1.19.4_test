@@ -4,6 +4,7 @@ import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.mca.BlockState;
+import org.jglrxavpok.hephaistos.nbt.NBTCompoundLike;
 
 public interface IBlock {
     /**
@@ -19,5 +20,11 @@ public interface IBlock {
      */
     @NotNull
     Material type();
-    BlockState convert();
+
+    /**
+     * ブロックのNBTを取得
+     * @return ブロックのNBT
+     */
+    @NotNull
+    NBTCompoundLike nbt();
 }
