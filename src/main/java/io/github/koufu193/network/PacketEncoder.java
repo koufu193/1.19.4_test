@@ -2,21 +2,26 @@ package io.github.koufu193.network;
 
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
-import io.github.koufu193.network.packets.login.LoginPackets;
-import io.github.koufu193.network.packets.play.PlayPackets;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 import java.util.zip.*;
 
+/**
+ * パケットをバイト配列にエンコードするクラス
+ */
 public class PacketEncoder {
     private static final PacketEncoder encoder=new PacketEncoder();
     private int compressionSize=-1;
-    public byte[] encode(AbstractPacket packet) throws IOException {
+
+    /**
+     * パケットを長さ込みでバイト配列にエンコードする
+     * @param packet エンコードするパケット
+     * @return パケットをエンコードしたもの
+     */
+    public byte[] encode(@NotNull AbstractPacket packet){
         byte[] data=encodeWithoutLength(packet);
         ByteArrayOutputStream packetOutput=new ByteArrayOutputStream(data.length+1);
         if(0<=this.compressionSize) {
@@ -47,25 +52,50 @@ public class PacketEncoder {
         }
         return output.toByteArray();
     }
-    public byte[] encodeWithoutLength(AbstractPacket packet) throws IOException{
-        ByteArrayOutputStream output=new ByteArrayOutputStream();
-        output.write(DataTypes.VarInt.encode(packet.packetId()));
-        List<DataTypes.DataType<?>> format=packet.format().getFormat();
+
+    /**
+     * パケットの長さを入れずにパケットをバイト配列にエンコードする
+     * @param packet エンコードするパケット
+     * @return パケットをエンコードしたもの
+     */
+    public byte[] encodeWithoutLength(@NotNull AbstractPacket packet) {
+        Object[] fields=packet.fields();
+        List<DataTypes.DataType<?>> format=packet.format().asUnmodifiableList();
+        if(fields==null) throw new IllegalArgumentException("packet is not initialized");
+        ByteArrayOutputStream output=new ByteArrayOutputStream(calculatePacketSize(packet));
+        output.writeBytes(DataTypes.VarInt.encode(packet.packetId()));
         for(int i=0;i<format.size();i++){
-            output.write(format.get(i).encodeObj(packet.fields()[i],packet.fields()));
+            output.writeBytes(format.get(i).encodeObj(fields[i],fields));
         }
         return output.toByteArray();
     }
+
+    /**
+     * 圧縮する最低サイズを設定する -1は圧縮しない
+     * @param size 圧縮する最低サイズ
+     */
     public void setCompressionSize(int size){
         if(size<0) size=-1;
         this.compressionSize=size;
     }
 
+    /**
+     * 圧縮する最低サイズを取得する
+     * @return 圧縮する最低サイズ -1は圧縮しない
+     */
     public int getCompressionSize() {
         return this.compressionSize;
     }
 
-    public static PacketEncoder getEncoder(){
+    public static PacketEncoder getDefaultEncoder(){
         return encoder;
+    }
+    private static int calculatePacketSize(@NotNull AbstractPacket packet){
+        int size=DataTypes.VarInt.size(packet.packetId());
+        List<DataTypes.DataType<?>> format=packet.format().asUnmodifiableList();
+        for(int i=0;i<format.size();i++){
+            size+=format.get(i).sizeObj(packet.fields()[i],packet.fields());
+        }
+        return size;
     }
 }

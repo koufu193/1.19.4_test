@@ -6,12 +6,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
-public class BrandChannel implements IPluginChannel{
+/**
+ * ブランドチャネル
+ */
+public class BrandChannel implements PluginChannel {
     private String brand;
-    public BrandChannel(){}
+    BrandChannel(){}
+
+    /**
+     * @param brand ブランド名
+     */
     public BrandChannel(@NotNull String brand){
-        brand(brand);
+        this.brand=brand;
     }
+    @NotNull
     @Override
     public Identifier channel() {
         return new Identifier("minecraft:brand");
@@ -27,11 +35,12 @@ public class BrandChannel implements IPluginChannel{
         this.brand=DataTypes.String.decode(buffer);
     }
 
+    /**
+     * ブランド名を取得
+     * @return ブランド名
+     */
+
     public String brand() {
         return this.brand;
-    }
-    public BrandChannel brand(@NotNull String brand){
-        this.brand=brand;
-        return this;
     }
 }

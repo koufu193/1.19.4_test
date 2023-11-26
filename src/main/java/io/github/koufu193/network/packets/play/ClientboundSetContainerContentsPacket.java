@@ -14,6 +14,7 @@ public class ClientboundSetContainerContentsPacket extends InventoryPacket {
         if(playerHeldItem==null) playerHeldItem=ItemStack.AIR;
         fields(windowId,stateId,view.inventory().getAllContents(),playerHeldItem);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Byte,DataTypes.VarInt,DataTypes.Item.array(),DataTypes.Item);

@@ -13,6 +13,7 @@ public class ClientboundDisconnectPacket extends AbstractPacket {
     public ClientboundDisconnectPacket(@NotNull TextComponent text){
         this.fields(text);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Chat);

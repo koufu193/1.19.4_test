@@ -1,6 +1,6 @@
 package io.github.koufu193.network.packets.play;
 
-import io.github.koufu193.network.IPackets;
+import io.github.koufu193.network.PacketRegistry;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.UndefinedPacket;
 
@@ -8,7 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class PlayPackets implements IPackets {
+/**
+ * プレイ状態のパケットレジストリ
+ */
+public class PlayPacketRegistry implements PacketRegistry {
     private static final Map<Integer, Supplier<AbstractPacket>> clientboundPackets = new HashMap<>() {
         {
             reg(ClientboundLoginPacket::new);
@@ -73,7 +76,7 @@ public class PlayPackets implements IPackets {
             put(supp.get().packetId(), supp);
         }
     };
-    private static final PlayPackets packets = new PlayPackets();
+    private static final PlayPacketRegistry registry = new PlayPacketRegistry();
 
     @Override
     public AbstractPacket getClientboundPacket(int id) {
@@ -89,7 +92,7 @@ public class PlayPackets implements IPackets {
         return packetSupplier.get();
     }
 
-    public static PlayPackets getPackets() {
-        return packets;
+    public static PlayPacketRegistry getRegistry() {
+        return registry;
     }
 }

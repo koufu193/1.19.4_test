@@ -1,14 +1,17 @@
 package io.github.koufu193.network.packets.login;
 
-import io.github.koufu193.core.properties.exceptions.UndefinedPacketIdException;
-import io.github.koufu193.network.IPackets;
+import io.github.koufu193.exceptions.UndefinedPacketIdException;
+import io.github.koufu193.network.PacketRegistry;
 import io.github.koufu193.network.packets.AbstractPacket;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class LoginPackets implements IPackets {
+/**
+ * ログイン状態のパケットレジストリ
+ */
+public class LoginPacketRegistry implements PacketRegistry {
     private static final Map<Integer, Supplier<AbstractPacket>> clientboundPackets=new HashMap<>(){{
         put(0,ClientboundDisconnectPacket::new);
         put(0x03,ClientboundSetCompressionPacket::new);
@@ -17,7 +20,7 @@ public class LoginPackets implements IPackets {
     private static final Map<Integer,Supplier<AbstractPacket>> serverboundPackets=new HashMap<>(){{
         put(0,ServerboundLoginStartPacket::new);
     }};
-    private static final LoginPackets packets=new LoginPackets();
+    private static final LoginPacketRegistry registry =new LoginPacketRegistry();
     @Override
     public AbstractPacket getClientboundPacket(int id) {
         Supplier<AbstractPacket> packetSupplier=clientboundPackets.get(id);
@@ -31,8 +34,8 @@ public class LoginPackets implements IPackets {
         if(packetSupplier==null) throw new UndefinedPacketIdException("Invalid packet id of "+id);
         return packetSupplier.get();
     }
-    public static LoginPackets getPackets() {
-        return packets;
+    public static LoginPacketRegistry getRegistry() {
+        return registry;
     }
 
 }

@@ -1,14 +1,10 @@
 package io.github.koufu193.network.handlers;
 
 
-import io.github.koufu193.core.files.NBTFiles;
-import io.github.koufu193.core.files.PlayerDataReader;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.RootCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.IntegerArgumentNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.StringArgumentNode;
-import io.github.koufu193.core.game.data.Difficulty;
-import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.core.game.data.component.ChatColor;
@@ -16,29 +12,22 @@ import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.inventory.*;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
-import io.github.koufu193.core.game.entities.Entity;
 import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.entities.interfaces.IEntity;
 import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 import io.github.koufu193.core.game.network.listener.ExecuteCommandPacketListener;
 import io.github.koufu193.core.game.network.listener.KeepAlivePacketListener;
-import io.github.koufu193.core.game.network.listener.PacketListener;
 import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.network.listener.debug.UndefinedPacketAlerter;
 import io.github.koufu193.core.game.world.World;
-import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.handlers.play.KeepAliveHandler;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.*;
 import io.github.koufu193.network.packets.play.channels.BrandChannel;
 import io.github.koufu193.server.MinecraftServer;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
-import org.jglrxavpok.hephaistos.nbt.NBT;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.*;
 
@@ -59,18 +48,9 @@ public class PlayHandler implements IHandler {
         player.packetHandler().sendPlayerAbilities(player.abilities());
         player.packetHandler().sendDifficulty(this.player.world().difficulty(), player.world().difficultyLocked());
         player.packetHandler().sendExpData(player.totalExpPoints(), player.expLevel(), player.expProgress());
-        player.packetHandler().sendPluginMessage(new BrandChannel().brand("koufu"));
+        player.packetHandler().sendPluginMessage(new BrandChannel("koufu"));
         player.packetHandler().teleport(player.location());
         player.packetHandler().sendPacket(new ClientboundWorldTimePacket(10L, -10L));
-        /*for(int x=-5;x<=5;x++) {
-            for(int z=-5;z<=5;z++) {
-                if (26 < x * x + z * z) continue;
-                player.handler().sendChunk(world.chunk(x,z));
-            }
-        }*/
-        List<World> worlds=new ArrayList<>(server.worlds());
-        worlds.forEach(a-> System.out.println(a.nameId()));
-        player.chunkHandler().load(0, 0);
         player.teleport(player.location().y(256).x(5).z(5));
         RootCommandNode rootNode = (
                 RootCommandNode.root().then(
@@ -90,7 +70,7 @@ public class PlayHandler implements IHandler {
                                 StringArgumentNode.quotableString("color").then(
                                         StringArgumentNode.quotableString("text").execute((executor, command) -> {
                                             player.kick(new TextComponent((String) command.args("text"), ChatColor.byString((String) command.args("color"))));
-                                            server.quit(player);
+                                            server.onQuit(player);
                                         })
                                 )
                         )
@@ -115,7 +95,7 @@ public class PlayHandler implements IHandler {
                                 IntegerArgumentNode.integer("x").then(
                                         IntegerArgumentNode.integer("z").execute(((executor, command) -> {
                                             IPlayer player1 = (IPlayer) executor;
-                                            player1.chunkHandler().load((Integer)command.args("x"),(Integer)command.args("z"));
+                                            player1.chunkSender().load((Integer)command.args("x"),(Integer)command.args("z"));
                                         }))))
                 )
         );
@@ -157,7 +137,7 @@ public class PlayHandler implements IHandler {
                 player.location(packet.toLocation(player.location()),packet.onGround());
                 AbstractPacket packet1;
                 Location location=player.location();
-                if(!player.chunkHandler().isLoaded(location.chunkX(),location.chunkZ())) player.chunkHandler().load(location.chunkX(),location.chunkZ());
+                if(!player.chunkSender().isLoaded(location.chunkX(),location.chunkZ())) player.chunkSender().load(location.chunkX(),location.chunkZ());
                 try {
                     packet1 = make(player, packet, o);
                 }catch (IllegalArgumentException e){

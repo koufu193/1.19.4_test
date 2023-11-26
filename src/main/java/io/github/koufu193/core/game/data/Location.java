@@ -102,7 +102,12 @@ public class Location implements Cloneable{
         this.z = z;
         return this;
     }
-
+    public Location add(double x,double y,double z){
+        this.x+=x;
+        this.y+=y;
+        this.z+=z;
+        return this;
+    }
     public long toLong(){
         return ((long) (((int) x) & 0x3FFFFFF) << 38) | ((long) (((int) z) & 0x3FFFFFF) << 12) | (((int)y) & 0xFFF);
     }

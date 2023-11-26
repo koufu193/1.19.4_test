@@ -14,6 +14,7 @@ public class ClientboundOpenHorseScreenPacket extends InventoryPacket{
     public ClientboundOpenHorseScreenPacket(byte windowId,int slotCount,int entityId){
         this.fields(windowId,slotCount,entityId);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Byte,DataTypes.VarInt,DataTypes.Int);

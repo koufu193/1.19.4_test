@@ -21,6 +21,7 @@ public class ClientboundCommandsPacket extends AbstractPacket {
     public ClientboundCommandsPacket(){
         this(RootCommandNode.EMPTY);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(new DataTypes.DataType<RootCommandNode>() {

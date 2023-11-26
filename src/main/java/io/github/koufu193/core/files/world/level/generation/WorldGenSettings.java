@@ -1,15 +1,15 @@
-package io.github.koufu193.core.game.world.generator;
+package io.github.koufu193.core.files.world.level.generation;
 
 import io.github.koufu193.core.game.data.Identifier;
-import io.github.koufu193.core.game.world.dimension.Dimension;
-import io.github.koufu193.util.CompoundConvertible;
+import io.github.koufu193.core.files.world.level.dimension.NBTDimension;
+import io.github.koufu193.util.ConvertibleToNBTCompound;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
 
 import java.util.*;
 
-public final class WorldGenSettings implements CompoundConvertible {
+public final class WorldGenSettings implements ConvertibleToNBTCompound {
     private static final String BONUS_CHEST = "bonus_chest";
     private static final String GENERATE_FEATURES = "generate_features";
     private static final String SEED = "seed";
@@ -19,7 +19,7 @@ public final class WorldGenSettings implements CompoundConvertible {
     private final boolean hasBonusChest;
     private final boolean generateFeatures;
     private final long hashedSeed;
-    private final Map<Identifier, Dimension> dimensions;
+    private final Map<Identifier, NBTDimension> dimensions;
     public WorldGenSettings(@NotNull NBTCompound nbt){
         this(
                 Objects.requireNonNull(nbt.getLong(WorldGenSettings.SEED),"Seed Not Found"),
@@ -28,14 +28,14 @@ public final class WorldGenSettings implements CompoundConvertible {
                 parseDimensions(Objects.requireNonNull(nbt.getCompound(WorldGenSettings.DIMENSIONS),"Dimensions Not Found"))
         );
     }
-    private static Map<Identifier,Dimension> parseDimensions(@NotNull NBTCompound nbt){
+    private static Map<Identifier, NBTDimension> parseDimensions(@NotNull NBTCompound nbt){
         Set<String> dimensionsKeys=nbt.getKeys();
-        Map<Identifier,Dimension> dimensions=new HashMap<>(dimensionsKeys.size());
-        dimensionsKeys.forEach(key-> dimensions.put(new Identifier(key),new Dimension(nbt.getCompound(key))));
+        Map<Identifier, NBTDimension> dimensions=new HashMap<>(dimensionsKeys.size());
+        dimensionsKeys.forEach(key-> dimensions.put(new Identifier(key),new NBTDimension(nbt.getCompound(key))));
         return dimensions;
     }
 
-    public WorldGenSettings(long seed, boolean hasBonusChest, boolean generateFeatures, @NotNull Map<Identifier, Dimension> dimensions) {
+    public WorldGenSettings(long seed, boolean hasBonusChest, boolean generateFeatures, @NotNull Map<Identifier, NBTDimension> dimensions) {
         this.seed = seed;
         this.hasBonusChest = hasBonusChest;
         this.generateFeatures = generateFeatures;
@@ -67,13 +67,13 @@ public final class WorldGenSettings implements CompoundConvertible {
             compound.put(WorldGenSettings.GENERATE_FEATURES, NBT.Boolean(this.generateFeatures));
             compound.put(
                     WorldGenSettings.DIMENSIONS,
-                    NBT.Compound(dimensions -> this.dimensions.forEach((id, dimension) -> dimensions.put(String.valueOf(id), dimension.toCompound()))
+                    NBT.Compound(dimensions -> this.dimensions.forEach((id, NBTDimension) -> dimensions.put(String.valueOf(id), NBTDimension.toCompound()))
                     )
             );
         });
     }
 
-    public Map<Identifier, Dimension> dimensions() {
+    public Map<Identifier, NBTDimension> dimensions() {
         return dimensions;
     }
 

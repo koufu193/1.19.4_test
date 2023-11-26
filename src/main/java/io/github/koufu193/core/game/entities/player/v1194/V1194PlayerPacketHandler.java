@@ -14,18 +14,18 @@ import io.github.koufu193.core.game.network.listener.PacketListener;
 import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.LightData;
-import io.github.koufu193.network.IPackets;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
+import io.github.koufu193.network.PacketRegistry;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.*;
-import io.github.koufu193.network.packets.play.channels.IPluginChannel;
+import io.github.koufu193.network.packets.play.channels.PluginChannel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.ClosedChannelException;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -36,26 +36,28 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     private final PacketDecoder decoder;
     private final PacketListeners listeners;
     private final Player player;
-    public V1194PlayerPacketHandler(@NotNull Player player,@NotNull PacketListeners listeners,@NotNull AsynchronousSocketChannel channel,@NotNull PacketEncoder encoder,@NotNull PacketDecoder decoder){
-        this.channel=channel;
-        this.encoder=encoder;
-        this.decoder=decoder;
-        this.listeners=listeners;
-        this.player=player;
+
+    public V1194PlayerPacketHandler(@NotNull Player player, @NotNull PacketListeners listeners, @NotNull AsynchronousSocketChannel channel, @NotNull PacketEncoder encoder, @NotNull PacketDecoder decoder) {
+        this.channel = channel;
+        this.encoder = encoder;
+        this.decoder = decoder;
+        this.listeners = listeners;
+        this.player = player;
     }
+
     @Override
-    public void teleport(@NotNull Location location,boolean onGround) {
+    public void teleport(@NotNull Location location, boolean onGround) {
         sendPacket(new ClientboundSynchronizePlayerPositionPacket(location));
-        AbstractPacket teleportPacket=new ClientboundTeleportEntityPacket(player.entityId(),location,onGround);
-        player.server().onlinePlayers().forEach(player1 ->{
-            if(player1==player) return;
+        AbstractPacket teleportPacket = new ClientboundTeleportEntityPacket(player.entityId(), location, onGround);
+        player.server().onlinePlayers().forEach(player1 -> {
+            if (player1 == player) return;
             player1.packetHandler().sendPacket(teleportPacket);
         });
     }
 
     @Override
     public void sendExpData(int totalExpPoints, int expLevel, float expProgress) {
-        sendPacket(new ClientboundSetExpPacket(expProgress,totalExpPoints,expLevel));
+        sendPacket(new ClientboundSetExpPacket(expProgress, totalExpPoints, expLevel));
     }
 
     @Override
@@ -64,17 +66,17 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     }
 
     @Override
-    public void entityTeleport(@NotNull IEntity entity, @NotNull Location location,boolean onGround) {
-        sendPacket(new ClientboundTeleportEntityPacket(entity.entityId(),location,onGround));
+    public void entityTeleport(@NotNull IEntity entity, @NotNull Location location, boolean onGround) {
+        sendPacket(new ClientboundTeleportEntityPacket(entity.entityId(), location, onGround));
     }
 
     @Override
     public void sendDifficulty(@NotNull Difficulty difficulty, boolean locked) {
-        sendPacket(new ClientboundChangeDifficultyPacket(difficulty,locked));
+        sendPacket(new ClientboundChangeDifficultyPacket(difficulty, locked));
     }
 
     @Override
-    public void sendPluginMessage(@NotNull IPluginChannel channel) {
+    public void sendPluginMessage(@NotNull PluginChannel channel) {
         sendPacket(new ClientboundPluginMessagePacket(channel));
     }
 
@@ -84,8 +86,8 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     }
 
     @Override
-    public void sendChunk(@NotNull Chunk chunk) {
-        sendPacket(new ClientboundChunkDataAndUpdateLightPacket(chunk));
+    public void sendChunk(int chunkX, int chunkZ, @NotNull Chunk chunk) {
+        sendPacket(new ClientboundChunkDataAndUpdateLightPacket(chunkX, chunkZ, chunk));
     }
 
     @Override
@@ -95,7 +97,7 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
 
     @Override
     public void sendSystemMessage(@NotNull TextComponent component, boolean onActionBar) {
-        sendPacket(new ClientboundSystemMessagePacket(component,onActionBar));
+        sendPacket(new ClientboundSystemMessagePacket(component, onActionBar));
     }
 
     @Override
@@ -115,7 +117,7 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
 
     @Override
     public void sendTabList(@NotNull TextComponent header, @NotNull TextComponent footer) {
-        sendPacket(new ClientboundSetTabListHeaderAndFooterPacket(header,footer));
+        sendPacket(new ClientboundSetTabListHeaderAndFooterPacket(header, footer));
     }
 
     @Override
@@ -128,22 +130,19 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
         sendPacket(new ClientboundRemovePlayerInfoPacket(ids));
     }
 
-    public synchronized void sendPacket(@NotNull AbstractPacket packet){
-        try{
+    public synchronized void sendPacket(@NotNull AbstractPacket packet) {
+        try {
             sendPacketOrThrow(packet);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | ClosedChannelException | ExecutionException | InterruptedException e) {
             reportError(e);
         }
     }
 
     @Override
-    public synchronized void sendPacketOrThrow(@NotNull AbstractPacket packet) {
-        try{
-            channel.write(ByteBuffer.wrap(this.encoder.encode(packet))).get();
-            this.listeners.onSend(packet);
-        } catch (IOException | ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    public synchronized void sendPacketOrThrow(@NotNull AbstractPacket packet) throws ClosedChannelException, ExecutionException, InterruptedException {
+        if (!channel.isOpen()) throw new ClosedChannelException();
+        channel.write(ByteBuffer.wrap(this.encoder.encode(packet))).get();
+        this.listeners.onSend(packet);
     }
 
     @Override
@@ -167,9 +166,11 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     }
 
     @Override
-    public AbstractPacket read(@NotNull IPackets packets) {
+    @Nullable
+    public AbstractPacket read(@NotNull PacketRegistry packets) {
+        if(!this.channel.isOpen()) return null;
         try {
-            AbstractPacket packet=this.decoder.decode(this.channel, packets);
+            AbstractPacket packet = this.decoder.decode(this.channel, packets);
             this.listeners.onReceive(packet);
             return packet;
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
@@ -185,9 +186,10 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
     }
 
     @Override
-    public void openInventory(byte windowId,@NotNull InventoryView view) {
-        if(view.inventory() instanceof HorseInventory horse) sendPacket(new ClientboundOpenHorseScreenPacket(windowId,horse));
-        else sendPacket(new ClientboundOpenScreenPacket(windowId,view));
+    public void openInventory(byte windowId, @NotNull InventoryView view) {
+        if (view.inventory() instanceof HorseInventory horse)
+            sendPacket(new ClientboundOpenHorseScreenPacket(windowId, horse));
+        else sendPacket(new ClientboundOpenScreenPacket(windowId, view));
     }
 
     @Override
@@ -197,15 +199,15 @@ public class V1194PlayerPacketHandler implements PlayerPacketHandler {
 
     @Override
     public void sendContainerContents(byte windowId, byte stateId, @NotNull InventoryView view, @Nullable ItemStack playerHeldItem) {
-        sendPacket(new ClientboundSetContainerContentsPacket(windowId,stateId,view,playerHeldItem));
+        sendPacket(new ClientboundSetContainerContentsPacket(windowId, stateId, view, playerHeldItem));
     }
 
     @Override
     public AbstractPacket handlePacket() {
-        return this.read(PlayPackets.getPackets());
+        return this.read(PlayPacketRegistry.getRegistry());
     }
 
-    private void reportError(Throwable throwable){
+    private void reportError(Throwable throwable) {
         throwable.printStackTrace();
     }
 }

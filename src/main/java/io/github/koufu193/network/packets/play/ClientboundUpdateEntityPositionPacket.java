@@ -23,6 +23,7 @@ public class ClientboundUpdateEntityPositionPacket extends AbstractPacket {
     public ClientboundUpdateEntityPositionPacket(int entityId,short deltaX,short deltaY,short deltaZ,boolean onGround){
         fields(entityId,deltaX,deltaY,deltaZ,onGround);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.VarInt,DataTypes.Short,DataTypes.Short,DataTypes.Short,DataTypes.Bool);

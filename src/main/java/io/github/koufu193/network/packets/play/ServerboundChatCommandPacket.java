@@ -3,12 +3,14 @@ package io.github.koufu193.network.packets.play;
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class ServerboundChatCommandPacket extends AbstractPacket {
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.String, DataTypes.Long, DataTypes.Long, new DataTypes.DataType<ArgumentSignature>() {

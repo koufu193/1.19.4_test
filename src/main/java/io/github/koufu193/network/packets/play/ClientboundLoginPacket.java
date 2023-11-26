@@ -4,23 +4,17 @@ import io.github.koufu193.core.files.NBTFiles;
 import io.github.koufu193.core.files.ServerProperties;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
-import io.github.koufu193.core.game.entities.Player;
 import io.github.koufu193.core.game.entities.interfaces.IPlayer;
 import io.github.koufu193.core.game.gamerule.GameRules;
 import io.github.koufu193.core.game.world.World;
-import io.github.koufu193.core.game.world.generator.WorldGenSettings;
+import io.github.koufu193.core.files.world.level.generation.WorldGenSettings;
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.server.MinecraftServer;
-import org.bukkit.WorldCreator;
-import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jglrxavpok.hephaistos.nbt.NBT;
-
-import java.util.Objects;
-import java.util.Optional;
 
 public class ClientboundLoginPacket extends AbstractPacket {
     ClientboundLoginPacket(){}
@@ -36,20 +30,20 @@ public class ClientboundLoginPacket extends AbstractPacket {
                 properties.hardcore(),
                 (byte) player.gameMode().id(),
                 (byte) player.previousGameMode().id(),
-                server.worlds().stream().map(World::nameId).toArray(Identifier[]::new),
+                server.worlds().stream().map(World::name).toArray(Identifier[]::new),
                 NBTFiles.registryCodec(),
                 world.dimensionType().id(),
-                world.nameId(),
+                world.name(),
                 genSettings.hashedSeed(),
                 properties.maxPlayers(),
                 player.viewDistance(),
                 player.viewDistance(),
                 false,
                 gameRules.doImmediateRespawn.value(),
-                world.debug(),
-                world.flat(),
+                world.isDebugWorld(),
+                world.isFlatWorld(),
                 lastDeathLocation!=null,
-                lastDeathLocation!=null?lastDeathLocation.world().nameId():null,
+                lastDeathLocation!=null?lastDeathLocation.world().name():null,
                 lastDeathLocation
         );
     }
@@ -75,6 +69,7 @@ public class ClientboundLoginPacket extends AbstractPacket {
             @Nullable Location deathLocation){
         fields(entityId,hardcore,gameMode,prevGameMode,dimensions,registryCodec,dimensionType,dimensionName,hashedSeed,maxPlayers,viewDistance,simulationsDistance,reduceDebugInfo,enableRespawnScreen,debug,flat,hasDeathLocation,deathDimensionName,deathLocation);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(

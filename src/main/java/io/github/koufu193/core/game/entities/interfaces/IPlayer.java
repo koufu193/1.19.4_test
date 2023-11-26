@@ -7,7 +7,7 @@ import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.entities.Player;
-import io.github.koufu193.core.game.entities.player.ChunkHandler;
+import io.github.koufu193.core.game.entities.player.ChunkSender;
 import io.github.koufu193.core.game.entities.player.PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.player.movement.PlayerMovementHandler;
 import io.github.koufu193.core.game.world.World;
@@ -58,7 +58,7 @@ public interface IPlayer extends CommandExecutor, IEntity {
     World world();
 
     PlayerMovementHandler movementHandler();
-    ChunkHandler chunkHandler();
+    ChunkSender chunkSender();
 
     PlayerInventory inventory();
 

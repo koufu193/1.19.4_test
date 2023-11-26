@@ -21,6 +21,7 @@ public class ServerboundClickContainerPacket extends InventoryPacket {
     private ClickType clickType;
     private DragType dragType;
 
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Byte, DataTypes.VarInt, DataTypes.Short, DataTypes.Byte, DataTypes.VarInt, new DataTypes.DataType<SlotData>() {
@@ -44,8 +45,9 @@ public class ServerboundClickContainerPacket extends InventoryPacket {
         }.array(), DataTypes.Item);
     }
 
+    @NotNull
     @Override
-    public ServerboundClickContainerPacket fields(Object... fields) {
+    public ServerboundClickContainerPacket fields(@NotNull Object... fields) {
         super.fields(fields);
         this.clickType = PARSERS.clickTypeParser().parse(mode(), button(), slot());
         this.dragType = PARSERS.dragTypeParser().parse(mode(), button(), slot());

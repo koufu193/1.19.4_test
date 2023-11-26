@@ -2325,6 +2325,12 @@ public class Material {
 	public int itemId() {
 		return this.itemId;
 	}
+	public boolean isAir(){
+		return this==Material.AIR||this==Material.CAVE_AIR||this==Material.VOID_AIR;
+	}
+	public boolean isNonAir(){
+		return !isAir();
+	}
 
 	@Override
 	public String toString() {

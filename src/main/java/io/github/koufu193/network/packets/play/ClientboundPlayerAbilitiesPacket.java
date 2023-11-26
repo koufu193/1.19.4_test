@@ -17,6 +17,7 @@ public class ClientboundPlayerAbilitiesPacket extends AbstractPacket {
     ClientboundPlayerAbilitiesPacket(){
         fields(0,1f,1f);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Byte,DataTypes.Float,DataTypes.Float);

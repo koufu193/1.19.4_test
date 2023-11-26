@@ -17,6 +17,7 @@ public class ClientboundJoinPlayerPacket extends AbstractPacket {
     public ClientboundJoinPlayerPacket(@NotNull IPlayer player){
         this(player.entityId(),player.uniqueId(),player.location());
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.VarInt, DataTypes.UUID, DataTypes.Location);

@@ -23,6 +23,7 @@ public class ClientboundTeleportEntityPacket extends AbstractPacket {
     public ClientboundTeleportEntityPacket(int entityId, double x, double y, double z, @NotNull Angle yaw,@NotNull Angle pitch,boolean onGround){
         fields(entityId,x,y,z,yaw,pitch,onGround);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.VarInt,DataTypes.Double,DataTypes.Double,DataTypes.Double,DataTypes.Angle,DataTypes.Angle,DataTypes.Bool);

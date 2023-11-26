@@ -2,27 +2,28 @@ package io.github.koufu193.core.files.world;
 
 import io.github.koufu193.core.game.data.Difficulty;
 import io.github.koufu193.core.game.data.Location;
-import io.github.koufu193.core.game.world.generator.WorldGenSettings;
-import org.bukkit.Bukkit;
+import io.github.koufu193.core.files.world.level.generation.WorldGenSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.*;
 import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 public class LevelDat {
     private final MutableNBTCompound data;
-    private final File file;
+    private final Path file;
 
     private final String name;
     private Difficulty difficulty;
     private boolean difficultyLocked;
     private Location defaultSpawnLocation;
     private final WorldGenSettings worldGenSettings;
-    public LevelDat(File f){
-        this.file=f;
-        if(!f.exists()){
+    public LevelDat(@NotNull Path file){
+        this.file=file;
+        if(Files.notExists(file)){
             this.data =NBT.Compound(a->{}).toMutableCompound();
         }else try(NBTReader reader=new NBTReader(this.file, CompressedProcesser.GZIP)){
             this.data = Objects.requireNonNull(((NBTCompound) reader.read()),"Data Not Found").toMutableCompound();
@@ -79,8 +80,5 @@ public class LevelDat {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-    public static LevelDat fromFolder(File folder){
-        return new LevelDat(new File(folder,"level.dat"));
     }
 }

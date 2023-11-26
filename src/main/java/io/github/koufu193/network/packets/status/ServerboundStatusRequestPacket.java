@@ -2,8 +2,13 @@ package io.github.koufu193.network.packets.status;
 
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.packets.AbstractPacket;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * クライアントからステータス情報をリクエストされたことを示すクラス
+ */
 public class ServerboundStatusRequestPacket extends AbstractPacket {
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.ofNull();

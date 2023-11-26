@@ -3,7 +3,7 @@ package io.github.koufu193.core.game.commands;
 import io.github.koufu193.core.game.commands.nodes.ICommandNode;
 import io.github.koufu193.core.game.commands.nodes.LiteralCommandNode;
 import io.github.koufu193.core.game.commands.nodes.arguments.ArgumentCommandNode;
-import io.github.koufu193.core.properties.exceptions.CommandException;
+import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.util.StringCommandReader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

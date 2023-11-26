@@ -3,10 +3,7 @@ package io.github.koufu193.network.handlers;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
 import io.github.koufu193.network.packets.AbstractPacket;
-import io.github.koufu193.network.packets.status.ClientboundPingResponsePacket;
-import io.github.koufu193.network.packets.status.ClientboundStatusResponsePacket;
-import io.github.koufu193.network.packets.status.ServerboundStatusRequestPacket;
-import io.github.koufu193.network.packets.status.StatusPackets;
+import io.github.koufu193.network.packets.status.*;
 import io.github.koufu193.server.MinecraftServer;
 
 import java.io.IOException;
@@ -19,12 +16,12 @@ public class StatusHandler implements IHandler {
     @Override
     public void handle(AsynchronousSocketChannel channel, MinecraftServer server) throws IOException, ExecutionException, InterruptedException, TimeoutException {
         for (int i = 0; i < 2; i++) {
-            AbstractPacket packet = PacketDecoder.getDecoder().decode(channel, StatusPackets.getPackets());
+            AbstractPacket packet = PacketDecoder.getDefaultDecoder().decode(channel, StatusPacketRegistry.getRegistry());
             if (packet instanceof ServerboundStatusRequestPacket) {
-                byte[] statusResponse = PacketEncoder.getEncoder().encode(generateStatusResponsePacket());
+                byte[] statusResponse = PacketEncoder.getDefaultEncoder().encode(generateStatusResponsePacket());
                 channel.write(ByteBuffer.wrap(statusResponse));
             } else {
-                channel.write(ByteBuffer.wrap(PacketEncoder.getEncoder().encode(generatePingResponsePacket((Long) packet.fields()[0]))));
+                channel.write(ByteBuffer.wrap(PacketEncoder.getDefaultEncoder().encode(generatePingResponsePacket(((ServerboundPingRequestPacket)packet).payload()))));
             }
         }
     }
@@ -50,9 +47,7 @@ public class StatusHandler implements IHandler {
         return packet;
     }
 
-    private ClientboundPingResponsePacket generatePingResponsePacket(long l) {
-        ClientboundPingResponsePacket packet = new ClientboundPingResponsePacket();
-        packet.fields(l);
-        return packet;
+    private ClientboundPingResponsePacket generatePingResponsePacket(long payload) {
+        return new ClientboundPingResponsePacket(payload);
     }
 }

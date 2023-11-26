@@ -16,6 +16,7 @@ public class ClientboundUpdateLightPacket extends AbstractPacket {
         this(LightData.from(chunk));
     }
     ClientboundUpdateLightPacket(){}
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.VarInt,DataTypes.VarInt,DataTypes.Bool,DataTypes.Light);

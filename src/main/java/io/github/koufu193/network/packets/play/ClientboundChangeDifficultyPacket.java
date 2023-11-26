@@ -13,6 +13,7 @@ public class ClientboundChangeDifficultyPacket extends AbstractPacket {
     public ClientboundChangeDifficultyPacket(){
         this(Difficulty.Normal,false);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Byte,DataTypes.Bool);

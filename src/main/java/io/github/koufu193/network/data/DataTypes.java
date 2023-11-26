@@ -12,8 +12,7 @@ import io.github.koufu193.core.game.data.item.ItemStack;
 import io.github.koufu193.core.game.world.chunk.LightData;
 import io.github.koufu193.core.properties.Properties;
 import io.github.koufu193.core.properties.Property;
-import io.github.koufu193.network.packets.play.channels.IPluginChannel;
-import io.github.koufu193.network.packets.play.channels.PluginChannels;
+import io.github.koufu193.network.packets.play.channels.PluginChannelRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jglrxavpok.hephaistos.nbt.*;
@@ -477,16 +476,16 @@ public final class DataTypes {
             return value.length;
         }
     };
-    public static final DataType<IPluginChannel> PluginChannel = new DataType<>() {
+    public static final DataType<io.github.koufu193.network.packets.play.channels.PluginChannel> PluginChannel = new DataType<>() {
         @Override
-        public IPluginChannel decode(ByteBuffer buffer) {
-            IPluginChannel channel = PluginChannels.get(DataTypes.Identifier.decode(buffer));
+        public io.github.koufu193.network.packets.play.channels.PluginChannel decode(ByteBuffer buffer) {
+            io.github.koufu193.network.packets.play.channels.PluginChannel channel = PluginChannelRegistry.get(DataTypes.Identifier.decode(buffer));
             channel.load(buffer);
             return channel;
         }
 
         @Override
-        public byte[] encode(IPluginChannel value) {
+        public byte[] encode(io.github.koufu193.network.packets.play.channels.PluginChannel value) {
             ByteBuffer buffer = ByteBuffer.allocate(this.size(value));
             buffer.put(DataTypes.Identifier.encode(value.channel()));
             buffer.put(value.bytes());
@@ -494,7 +493,7 @@ public final class DataTypes {
         }
 
         @Override
-        public int size(IPluginChannel value) {
+        public int size(io.github.koufu193.network.packets.play.channels.PluginChannel value) {
             return DataTypes.Identifier.size(value.channel()) + value.bytes().length;
         }
     };
@@ -521,8 +520,8 @@ public final class DataTypes {
         @Override
         public byte[] encode(Properties value) {
             ByteArrayOutputStream output = new ByteArrayOutputStream(this.size(value));
-            output.writeBytes(DataTypes.VarInt.encode(value.getProperties().size()));
-            for (Property property : value.getProperties().values()) {
+            output.writeBytes(DataTypes.VarInt.encode(value.asUnmodifiableMap().size()));
+            for (Property property : value.asUnmodifiableMap().values()) {
                 output.writeBytes(DataTypes.String.encode(property.name()));
                 output.writeBytes(DataTypes.String.encode(property.value()));
                 output.writeBytes(DataTypes.Bool.encode(property.isSigned()));
@@ -533,8 +532,8 @@ public final class DataTypes {
 
         @Override
         public int size(Properties value) {
-            int size = DataTypes.VarInt.size(value.getProperties().size());
-            for (Property property : value.getProperties().values()) {
+            int size = DataTypes.VarInt.size(value.asUnmodifiableMap().size());
+            for (Property property : value.asUnmodifiableMap().values()) {
                 size += (DataTypes.String.size(property.name()) + DataTypes.String.size(property.value()) + DataTypes.Bool.size(property.isSigned()));
                 if (property.isSigned()) size += DataTypes.String.size(property.signature());
             }

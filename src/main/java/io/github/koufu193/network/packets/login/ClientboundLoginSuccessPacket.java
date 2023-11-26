@@ -12,14 +12,28 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+/**
+ * ログインが成功したことを示すパケット
+ */
 public class ClientboundLoginSuccessPacket extends AbstractPacket {
     ClientboundLoginSuccessPacket(){}
+
+    /**
+     * @param uuid プレーヤーのUUID
+     * @param name プレーヤーの名前
+     * @param properties　プレーヤーの属性
+     */
     public ClientboundLoginSuccessPacket(@NotNull UUID uuid,@NotNull String name,@NotNull Properties properties){
         fields(uuid,name,properties);
     }
+
+    /**
+     * @param profile プレーヤーのプロファイル
+     */
     public ClientboundLoginSuccessPacket(@NotNull GameProfile profile){
         this(profile.id(),profile.name(),profile.properties());
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.UUID, DataTypes.String, DataTypes.Properties);

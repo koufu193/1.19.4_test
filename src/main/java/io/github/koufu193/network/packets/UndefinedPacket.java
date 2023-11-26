@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class UndefinedPacket extends AbstractPacket {
     private byte[] bytes;
-    private int packetId;
+    private final int packetId;
     public UndefinedPacket(int packetId, @NotNull byte[] bytes){
         this.bytes=bytes;
         this.packetId=packetId;
@@ -15,7 +15,7 @@ public class UndefinedPacket extends AbstractPacket {
     public UndefinedPacket(int packetId){
         this(packetId,new byte[0]);
     }
-    UndefinedPacket(){}
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.ByteArray);
@@ -24,8 +24,9 @@ public class UndefinedPacket extends AbstractPacket {
         return this.bytes;
     }
 
+    @NotNull
     @Override
-    public AbstractPacket fields(Object... fields) {
+    public AbstractPacket fields(@NotNull Object... fields) {
         this.bytes=(byte[])fields[0];
         return this;
     }

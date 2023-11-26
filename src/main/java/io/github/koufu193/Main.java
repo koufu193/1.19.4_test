@@ -26,7 +26,7 @@ import java.util.UUID;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println(Integer.parseInt("+10"));
+        System.out.println((16<<8)|(16<<4)|16);
     }
 
 }

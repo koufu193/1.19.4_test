@@ -1,15 +1,13 @@
 package io.github.koufu193.network.packets.play;
 
-import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
-import io.github.koufu193.network.packets.play.channels.IPluginChannel;
-import io.github.koufu193.network.packets.play.channels.PluginChannels;
-
-import java.nio.ByteBuffer;
+import io.github.koufu193.network.packets.play.channels.PluginChannel;
+import org.jetbrains.annotations.NotNull;
 
 public class ServerboundPluginMessagePacket extends AbstractPacket {
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.PluginChannel);
@@ -20,7 +18,7 @@ public class ServerboundPluginMessagePacket extends AbstractPacket {
         return 0x0d;
     }
 
-    public IPluginChannel channel() {
-        return (IPluginChannel) this.fields()[0];
+    public PluginChannel channel() {
+        return (PluginChannel) this.fields()[0];
     }
 }

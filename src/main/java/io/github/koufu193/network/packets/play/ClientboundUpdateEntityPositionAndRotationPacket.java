@@ -28,6 +28,7 @@ public class ClientboundUpdateEntityPositionAndRotationPacket extends AbstractPa
     public ClientboundUpdateEntityPositionAndRotationPacket(int entityId, short deltaX, short deltaY, short deltaZ, float yaw, float pitch,boolean onGround){
         this(entityId,deltaX,deltaY,deltaZ,new Angle(yaw),new Angle(pitch),onGround);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.VarInt,DataTypes.Short,DataTypes.Short,DataTypes.Short,DataTypes.Angle,DataTypes.Angle,DataTypes.Bool);

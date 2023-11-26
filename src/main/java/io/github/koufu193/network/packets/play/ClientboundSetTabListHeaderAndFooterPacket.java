@@ -13,6 +13,7 @@ public class ClientboundSetTabListHeaderAndFooterPacket extends AbstractPacket {
     public ClientboundSetTabListHeaderAndFooterPacket(@NotNull TextComponent header,@NotNull TextComponent footer){
         fields(header,footer);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Chat,DataTypes.Chat);

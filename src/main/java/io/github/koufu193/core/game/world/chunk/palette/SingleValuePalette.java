@@ -3,14 +3,15 @@ package io.github.koufu193.core.game.world.chunk.palette;
 import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.network.data.DataTypes;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 public class SingleValuePalette implements Palette{
     private final int id;
-    public SingleValuePalette(String name){
-        this(Material.fromId(name).blockId());
+    public SingleValuePalette(@NotNull Material material){
+        this(material.blockId());
     }
     public SingleValuePalette(int id){
         this.id=id;
@@ -26,7 +27,7 @@ public class SingleValuePalette implements Palette{
     }
 
     @Override
-    public void write(OutputStream output) throws IOException {
+    public void write(@NotNull OutputStream output) throws IOException {
         output.write(this.bitsPerBlock());
         output.write(DataTypes.VarInt.encode(this.id));
         output.write((byte)0);

@@ -16,6 +16,7 @@ public class ClientboundSetExpPacket extends AbstractPacket {
     public ClientboundSetExpPacket(float progress,int total,int level){
         fields(progress,total,level);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Float,DataTypes.VarInt,DataTypes.VarInt);

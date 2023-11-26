@@ -2,21 +2,30 @@ package io.github.koufu193.core.files;
 
 import io.github.koufu193.core.game.data.Difficulty;
 import io.github.koufu193.core.game.entities.Player;
+import io.github.koufu193.util.FileUtils;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Properties;
 
+/**
+ * server.properties
+ */
 public class ServerProperties {
-    private boolean debug=false;
-    private boolean hardcore=false;
-    private int networkCompressionThreshold=256;
-    private Player.GameMode defaultGameMode= Player.GameMode.Survival;
-    private int maxPlayers=20;
-    private File levelFolder;
-    private String levelName;
-    private Difficulty difficulty;
-    private int viewDistance;
+    private final boolean debug;
+    private final boolean hardcore;
+    private final int networkCompressionThreshold;
+    private final Player.GameMode defaultGameMode;
+    private final int maxPlayers;
+    private final Path levelFolder;
+    private final String levelName;
+    private final Difficulty difficulty;
+    private final int viewDistance;
+
     public boolean debug() {
         return debug;
     }
@@ -29,6 +38,8 @@ public class ServerProperties {
         return networkCompressionThreshold;
     }
 
+    @NotNull
+
     public Player.GameMode defaultGameMode() {
         return defaultGameMode;
     }
@@ -36,13 +47,20 @@ public class ServerProperties {
     public int maxPlayers() {
         return maxPlayers;
     }
-    public File levelFolder(){
+
+    @NotNull
+
+    public Path levelFolder() {
         return levelFolder;
     }
+
+    @NotNull
 
     public String levelName() {
         return levelName;
     }
+
+    @NotNull
 
     public Difficulty difficulty() {
         return difficulty;
@@ -52,36 +70,39 @@ public class ServerProperties {
         return viewDistance;
     }
 
-    public static ServerProperties fromFile(File file) {
-        ServerProperties properties=new ServerProperties();
-        if(!file.exists()){
-            try(BufferedOutputStream writer=new BufferedOutputStream(new FileOutputStream(file));InputStream defaultServerProperties=properties.getClass().getClassLoader().getResourceAsStream("server.properties")){
-                writer.write(Objects.requireNonNull(defaultServerProperties).readAllBytes());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }else {
-            try (BufferedInputStream input = new BufferedInputStream(new FileInputStream(file))) {
-                Properties loadedProperties=new Properties();
-                loadedProperties.load(input);
-
-                properties.debug= Boolean.parseBoolean((String) loadedProperties.getOrDefault("debug","false"));
-                properties.hardcore= Boolean.parseBoolean((String) loadedProperties.getOrDefault("hardcore","false"));
-                properties.networkCompressionThreshold= Integer.parseInt((String) loadedProperties.getOrDefault("network-compression-threshold","256"));
-                properties.defaultGameMode= Player.GameMode.fromString((String) loadedProperties.getOrDefault("gamemode","survival"));
-                properties.maxPlayers= Integer.parseInt((String)  loadedProperties.getOrDefault("max-players","20"));
-                properties.levelFolder = new File(file.getParent(),"world"+ loadedProperties.getOrDefault("level-name",""));
-                properties.levelName=(String) loadedProperties.getOrDefault("level-name","");
-                properties.difficulty=Difficulty.valueOfWithIgnoringCase(((String) loadedProperties.getOrDefault("difficulty","normal")));
-                properties.viewDistance=Integer.parseInt((String)loadedProperties.getOrDefault("view-distance","10"));
-                if(properties.maxPlayers<0) throw new RuntimeException("max-players must be 0 at least");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+    public ServerProperties(@NotNull Path file) {
+        writeDefaultProperties(file);
+        FileUtils.throwIfNotAFile(file);
+        try (BufferedInputStream input = new BufferedInputStream(Files.newInputStream(file))) {
+            Properties loadedProperties = new Properties();
+            loadedProperties.load(input);
+            //apply settings
+            this.debug = Boolean.parseBoolean((String) loadedProperties.getOrDefault("debug", "false"));
+            this.hardcore = Boolean.parseBoolean((String) loadedProperties.getOrDefault("hardcore", "false"));
+            this.networkCompressionThreshold = Integer.parseInt((String) loadedProperties.getOrDefault("network-compression-threshold", "256"));
+            this.defaultGameMode = Player.GameMode.fromString((String) loadedProperties.getOrDefault("gamemode", "survival"));
+            this.maxPlayers = Integer.parseInt((String) loadedProperties.getOrDefault("max-players", "20"));
+            this.levelFolder = file.getParent().resolve("world" + loadedProperties.getOrDefault("level-name", ""));
+            this.levelName = (String) loadedProperties.getOrDefault("level-name", "");
+            this.difficulty = Difficulty.valueOfWithIgnoringCase(((String) loadedProperties.getOrDefault("difficulty", "normal")));
+            this.viewDistance = Integer.parseInt((String) loadedProperties.getOrDefault("view-distance", "10"));
+            if (this.maxPlayers < 0) throw new RuntimeException("max-players must be 0 at least");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return properties;
     }
-    public static  ServerProperties fromFolder(File folder){
-        return fromFile(new File(folder,"server.properties"));
+
+    private static void writeDefaultProperties(@NotNull Path file) {
+        if (Files.exists(file)) return;
+        try (BufferedInputStream defaultServerProperties = new BufferedInputStream(
+                Objects.requireNonNull(
+                        Thread.currentThread().getContextClassLoader().getResourceAsStream("server.properties"),
+                        "default server.properties not found"
+                )
+        )) {
+            FileUtils.write(file, defaultServerProperties.readAllBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

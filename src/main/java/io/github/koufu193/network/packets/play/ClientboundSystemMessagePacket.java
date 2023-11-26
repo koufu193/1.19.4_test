@@ -17,6 +17,7 @@ public class ClientboundSystemMessagePacket extends AbstractPacket {
         fields(component,onActionBar);
     }
     public ClientboundSystemMessagePacket(){this(TextComponent.EMPTY);}
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Chat, DataTypes.Bool);

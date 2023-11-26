@@ -11,19 +11,19 @@ import io.github.koufu193.core.game.data.inventory.InventoryView;
 import io.github.koufu193.core.game.data.inventory.PlayerInventory;
 import io.github.koufu193.core.game.data.item.ItemMeta;
 import io.github.koufu193.core.game.data.item.ItemStack;
-import io.github.koufu193.core.game.entities.player.ChunkHandler;
+import io.github.koufu193.core.game.entities.player.ChunkSender;
 import io.github.koufu193.core.game.entities.player.CommandManager;
 import io.github.koufu193.core.game.entities.player.InventoryHandler;
 import io.github.koufu193.core.game.entities.player.PlayerPacketHandler;
-import io.github.koufu193.core.game.entities.player.v1194.V1194PlayerPacketHandler;
 import io.github.koufu193.core.game.entities.player.movement.PlayerMovementHandler;
-
+import io.github.koufu193.core.game.entities.player.v1194.V1194PlayerPacketHandler;
 import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.world.World;
-import io.github.koufu193.core.properties.exceptions.CommandException;
+import io.github.koufu193.exceptions.CommandException;
 import io.github.koufu193.network.PacketDecoder;
 import io.github.koufu193.network.PacketEncoder;
 import io.github.koufu193.server.MinecraftServer;
+import io.github.koufu193.util.ConvertibleToNBTCompound;
 import io.github.koufu193.util.NBTUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,10 +32,7 @@ import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousSocketChannel;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class Player extends Entity implements io.github.koufu193.core.game.entities.interfaces.IPlayer {
     private final AsynchronousSocketChannel channel;
@@ -50,53 +47,84 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     private InventoryView openingView;
     private Location lastDeathLocation;
     private final PlayerPacketHandler packetHandler;
-    private final PlayerMovementHandler movementHandler=new PlayerMovementHandler(this);
+    private final PlayerMovementHandler movementHandler = new PlayerMovementHandler(this);
     private final PlayerInventory inventory;
     private final InventoryHandler inventoryHandler;
-    private final CommandManager commandManager=new CommandManager(this);
-    private final ChunkHandler chunkHandler=new ChunkHandler(this);
+    private final CommandManager commandManager = new CommandManager(this);
+    private final ChunkSender chunkSender = new ChunkSender(this);
+
     public Player(MinecraftServer server, AsynchronousSocketChannel channel, int entityId, MutableNBTCompound nbt, GameProfile profile) {
-        super(server,entityId,nbt,server.world(readWorldUUID(nbt)));
-        this.channel=channel;
-        this.gameMode=GameMode.fromId((int)nbt.getOrPut("playerGameType",()->NBT.Int(server.serverProperties().defaultGameMode().id())).getValue());
-        Integer preGameMode=nbt.getInt("previousPlayerGameType");
-        this.previousGameMode=preGameMode!=null?GameMode.fromId(preGameMode):GameMode.Undefined;
-        if(nbt.getCompound("abilities")==null) nbt.put("abilities",NBT.Compound(a->{}));
-        this.abilities=new PlayerAbilities(nbt.getCompound("abilities"));
-        nbt.put("abilities",this.abilities.nbt());
-        this.totalExpPoints=(int)nbt.getOrPut("XpTotal",()->NBT.Int(0)).getValue();
-        this.expLevel=(int)nbt.getOrPut("XpLevel",()->NBT.Int(0)).getValue();
-        this.expProgress=(float)nbt.getOrPut("XpP",()->NBT.Float(0)).getValue();
-        this.packetHandler=new V1194PlayerPacketHandler(this,new PacketListeners(this),this.channel,new PacketEncoder(),new PacketDecoder());
-        this.profile=profile;
-        this.inventory=loadInventory(nbt);
-        this.inventoryHandler=new InventoryHandler(this);
-        if(nbt.containsKey("lastDeathLocation")){
-            NBTCompound lastDeathNBT=nbt.getCompound("lastDeathLocation");
-            this.lastDeathLocation=NBTUtils.convertIntPositionToLocation(lastDeathNBT.getList("pos")).world(server.world(new Identifier(lastDeathNBT.getString("dimension"))));
-        }
+        super(server, entityId, nbt, server.world(readWorldUUID(nbt)));
+        this.channel = channel;
+        this.gameMode = GameMode.fromId(
+                Objects.requireNonNullElseGet(nbt.getInt("playerGameType"), () -> server.serverProperties().defaultGameMode().id())
+        );
+        this.previousGameMode = GameMode.fromId(
+                Objects.requireNonNullElseGet(nbt.getInt("previousPlayerGameType"), GameMode.Undefined::id)
+        );
+        this.abilities = Optional.ofNullable(nbt.getCompound("abilities"))
+                .map(PlayerAbilities::new)
+                .orElseGet(PlayerAbilities::new);
+        this.totalExpPoints = Objects.requireNonNullElse(nbt.getInt("XpTotal"), 0);
+        this.expLevel = Objects.requireNonNullElse(nbt.getInt("XpLevel"), 0);
+        this.expProgress = Objects.requireNonNullElse(nbt.getFloat("XpP"), 0.0f);
+        this.profile = profile;
+        this.inventory = loadInventory(nbt);
+        this.lastDeathLocation = Optional.ofNullable(nbt.getCompound("lastDeathLocation"))
+                .map(value->
+                        NBTUtils.convertIntPositionToLocation(value.getList("pos"))
+                                .world(server.world(new Identifier(value.getString("dimension")))))
+                .orElse(null);
+        this.inventoryHandler = new InventoryHandler(this);
+        this.packetHandler = new V1194PlayerPacketHandler(this, new PacketListeners(this), this.channel, new PacketEncoder(), new PacketDecoder());
     }
 
-    public ChunkHandler chunkHandler() {
-        return chunkHandler;
+    @Override
+    public NBTCompound toCompound() {
+        return NBT.Compound(root -> {
+            root.setAll(super.toCompound());
+            root.setInt("playerGameType", this.gameMode.id());
+            if (this.previousGameMode != null){
+                root.setInt("previousPlayerGameType", this.previousGameMode.id());
+            }else root.remove("previousPlayerGameType");
+            root.set("abilities", this.abilities.toCompound());
+            root.setInt("XpTotal", this.totalExpPoints);
+            root.setInt("XpLevel", this.expLevel);
+            root.setFloat("XpP", this.expProgress);
+            if(this.lastDeathLocation!=null){
+                root.set("lastDeathLocation",NBT.Compound(lastDeathLocation->{
+                    lastDeathLocation.setIntArray("pos",new int[]{(int) this.lastDeathLocation.x(), (int) this.lastDeathLocation.y(), (int) this.lastDeathLocation.z()});
+                    lastDeathLocation.setString("dimension",this.lastDeathLocation.world().name().toString());
+                }));
+            }else root.remove("lastDeathLocation");
+        });
     }
 
-    private static UUID readWorldUUID(@NotNull NBTCompoundLike nbt){
-        return new UUID(nbt.getLong("WorldUUIDMost"),nbt.getLong("WorldUUIDLeast"));
+    public ChunkSender chunkSender() {
+        return chunkSender;
     }
-    private static PlayerInventory loadInventory(MutableNBTCompound nbt){
-        int selectedSlot=(int)nbt.getOrPut("SelectedItemSlot",()->NBT.Int(0)).getValue();
-        PlayerInventory playerInventory=new PlayerInventory();
-        Collection<? extends NBTCompound> inventoryNBT=((NBTList<NBTCompound>)nbt.getOrPut("Inventory",()->NBT.List(NBTType.TAG_Compound,new ArrayList<>()))).getValue();
-        inventoryNBT.forEach(nbtCompound-> playerInventory.set(nbtCompound.getByte("Slot"),makeItemStack(nbtCompound)));
+
+
+    private static UUID readWorldUUID(@NotNull NBTCompoundLike nbt) {
+        return new UUID(nbt.getLong("WorldUUIDMost"), nbt.getLong("WorldUUIDLeast"));
+    }
+
+    private static PlayerInventory loadInventory(NBTCompoundLike nbt) {
+        int selectedSlot = Objects.requireNonNullElse(nbt.getInt("SelectedItemSlot"), 0);
+        PlayerInventory playerInventory = new PlayerInventory();
+        List<? extends NBT> inventoryNBT= Objects.requireNonNullElseGet(nbt.getList("Inventory"), ()->new NBTList<>(NBTType.TAG_Compound)).asListView();
+        inventoryNBT.stream()
+                .map(itemNBT->(NBTCompoundLike)itemNBT)
+                .forEach(itemNBT -> playerInventory.set(itemNBT.getByte("Slot"), makeItemStack(itemNBT)));
         playerInventory.selectedSlot(selectedSlot);
         return playerInventory;
     }
-    private static ItemStack makeItemStack(NBTCompound nbt){
-        NBTCompound compound=Objects.requireNonNullElse(nbt.getCompound("tag"),NBTCompound.EMPTY);
-        Material material=Material.fromId(nbt.getString("id"));
-        byte amount=nbt.getByte("Count");
-        return new ItemStack(material,amount, ItemMeta.defaultItemMeta(material,compound));
+
+    private static ItemStack makeItemStack(NBTCompoundLike nbt) {
+        NBTCompound compound = Objects.requireNonNullElse(nbt.getCompound("tag"), NBTCompound.EMPTY);
+        Material material = Material.fromId(nbt.getString("id"));
+        byte amount = nbt.getByte("Count");
+        return new ItemStack(material, amount, ItemMeta.defaultItemMeta(material, compound));
     }
 
     @NotNull
@@ -113,12 +141,10 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
 
     @Override
     public void gameMode(@NotNull GameMode gameMode) {
-        if(this.gameMode==gameMode) return;
-        if(gameMode==GameMode.Undefined) throw new IllegalArgumentException("gameMode must not be Undefined");
-        this.previousGameMode=this.gameMode;
-        this.gameMode=gameMode;
-        this.nbt.setInt("playerGameType",this.gameMode.id());
-        this.nbt.setInt("previousPlayerGameType",this.previousGameMode.id());
+        if (this.gameMode == gameMode) return;
+        if (gameMode == GameMode.Undefined) throw new IllegalArgumentException("gameMode must not be Undefined");
+        this.previousGameMode = this.gameMode;
+        this.gameMode = gameMode;
     }
 
     @Override
@@ -153,27 +179,26 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
 
     @Override
     public void expProgress(float progress) {
-        if(progress<0||1<progress) throw new IllegalArgumentException("Experience progress must be between 0 and 1");
-        this.expProgress=progress;
-        this.nbt.setFloat("XpP",progress);
-        this.packetHandler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
+        if (progress < 0 || 1 < progress)
+            throw new IllegalArgumentException("Experience progress must be between 0 and 1");
+        this.expProgress = progress;
+        this.packetHandler.sendExpData(this.totalExpPoints, this.expLevel, this.expProgress);
     }
 
     @Override
     public void expLevel(int level) {
-        if(level<0) throw new IllegalArgumentException("Experience level must not be negative");
-        this.expLevel=level;
-        this.nbt.setInt("XpLevel",level);
-        this.packetHandler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
+        if (level < 0) throw new IllegalArgumentException("Experience level must not be negative");
+        this.expLevel = level;
+        this.packetHandler.sendExpData(this.totalExpPoints, this.expLevel, this.expProgress);
     }
 
     @Override
     public void totalExpPoints(int points) {
-        if(points<0) throw new IllegalArgumentException("Total experience points must not be negative");
-        this.totalExpPoints=points;
-        this.nbt.setInt("XpTotal",points);
-        this.packetHandler.sendExpData(this.totalExpPoints,this.expLevel,this.expProgress);
+        if (points < 0) throw new IllegalArgumentException("Total experience points must not be negative");
+        this.totalExpPoints = points;
+        this.packetHandler.sendExpData(this.totalExpPoints, this.expLevel, this.expProgress);
     }
+
     @Override
     public MainHand mainHand() {
         return this.property.mainHand();
@@ -186,7 +211,7 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
 
     @Override
     public int viewDistance() {
-        return this.property!=null?this.property.viewDistance():server.serverProperties().viewDistance();
+        return this.property != null ? this.property.viewDistance() : server.serverProperties().viewDistance();
     }
 
     @Override
@@ -197,7 +222,8 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     public Property property() {
         return property;
     }
-    public PlayerAbilities abilities(){
+
+    public PlayerAbilities abilities() {
         return this.abilities;
     }
 
@@ -208,7 +234,7 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     @Override
     public void teleport(@NotNull Location location) {
         this.packetHandler.teleport(location);
-        this.location=location;
+        this.location = location;
     }
 
     public PlayerPacketHandler packetHandler() {
@@ -225,11 +251,12 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
         return this.profile;
     }
 
-    protected void name(@NotNull String name){
-        this.profile=new GameProfile(profile.id(),name,profile.properties());
+    protected void name(@NotNull String name) {
+        this.profile = new GameProfile(profile.id(), name, profile.properties());
     }
-    public void location(@NotNull Location location){
-        this.location=location;
+
+    public void location(@NotNull Location location) {
+        this.location = location;
     }
 
     public AsynchronousSocketChannel channel() {
@@ -238,7 +265,7 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
 
     @Override
     public World world() {
-        return this.location!=null?location.world():null;
+        return this.location != null ? location.world() : null;
     }
 
     @Override
@@ -250,7 +277,8 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     public PlayerInventory inventory() {
         return this.inventory;
     }
-    public void setCommands(@NotNull RootCommandNode root){
+
+    public void setCommands(@NotNull RootCommandNode root) {
         this.commandManager.root(root);
         this.packetHandler.sendCommandNode(root);
     }
@@ -258,9 +286,10 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     @Override
     public void kick(@NotNull TextComponent reason) {
         this.packetHandler.kick(reason);
-        try{
+        try {
             channel.close();
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 
     @Override
@@ -270,27 +299,28 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
 
     @Override
     public void openInventory(@NotNull InventoryView view) {
-        if(this.openingView!=null) closeInventory();
+        if (this.openingView != null) closeInventory();
         this.inventoryHandler.open(view);
-        this.openingView=view;
+        this.openingView = view;
     }
-    public void onClose(){
-        if(this.openingView==null) return;
+
+    public void onClose() {
+        if (this.openingView == null) return;
         this.inventoryHandler.onClose(this.openingView);
-        this.openingView=null;
+        this.openingView = null;
     }
 
     @Override
     public void closeInventory() {
-        if(this.openingView==null) return;
+        if (this.openingView == null) return;
         this.inventoryHandler.close(this.openingView);
-        this.openingView=null;
+        this.openingView = null;
     }
 
     @Override
     public void dispatchCommand(@NotNull String command) {
         try {
-            Command c = Command.parse(command,this.commandManager.root());
+            Command c = Command.parse(command, this.commandManager.root());
             c.execute(this);
         } catch (CommandException e) {
             this.packetHandler.sendSystemMessage(e.messageComponent());
@@ -300,20 +330,22 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
     @Nullable
     @Override
     public Location lastDeathLocation() {
-        return null;
+        return this.lastDeathLocation;
     }
 
-    public enum GameMode{
-        Survival(0),Creative(1),Adventure(2),Spectator(3),Undefined(-1);
+    public enum GameMode {
+        Survival(0), Creative(1), Adventure(2), Spectator(3), Undefined(-1);
         private final int id;
-        GameMode(int id){
-            this.id=id;
+
+        GameMode(int id) {
+            this.id = id;
         }
 
         public int id() {
             return id;
         }
-        public static GameMode fromString(String mode){
+
+        public static GameMode fromString(String mode) {
             return switch (mode) {
                 case "survival" -> Survival;
                 case "creative" -> Creative;
@@ -322,35 +354,49 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
                 default -> throw new IllegalArgumentException("Invalid String " + mode);
             };
         }
-        public static GameMode fromId(int id){
-            if(id<0||3<id) throw new IllegalArgumentException("invalid id "+id);
-            return GameMode.values()[id];
+
+        public static GameMode fromId(int id) {
+            for(GameMode mode:values()){
+                if(mode.id==id) return mode;
+            }
+            return null;
         }
     }
-    public static class PlayerAbilities{
-        public PlayerAbilities(NBTCompound nbt){
-            if(nbt==null) nbt=NBT.Compound(root->{});
-            this.nbt=nbt.toMutableCompound();
-            this.flying= Boolean.TRUE.equals(this.nbt.getOrPut("flying", NBT::getFALSE).getValue());
-            this.mayFly=Boolean.TRUE.equals(this.nbt.getOrPut("mayfly",NBT::getFALSE).getValue());
-            this.invulnerable=Boolean.TRUE.equals(this.nbt.getOrPut("invulnerable",NBT::getFALSE).getValue());
-            this.instabuild=Boolean.TRUE.equals(this.nbt.getOrPut("instabuild",NBT::getFALSE).getValue());
-            this.flySpeed=(Float)this.nbt.getOrPut("flySpeed",()->NBT.Float(flySpeed)).getValue();
-            this.walkSpeed=(Float)this.nbt.getOrPut("walkSpeed",()->NBT.Float(walkSpeed)).getValue();
-            this.mayBuild=!Boolean.FALSE.equals(this.nbt.getOrPut("mayBuild",NBT::getTRUE).getValue());
+
+    public static class PlayerAbilities implements ConvertibleToNBTCompound {
+        public PlayerAbilities(@NotNull NBTCompound nbt) {
+            this.mayFly = Objects.requireNonNullElse(nbt.getBoolean("mayfly"), false);
+            this.mayBuild = Objects.requireNonNullElse(nbt.getBoolean("mayBuild"), true);
+            this.flying = Objects.requireNonNullElse(nbt.getBoolean("flying"), false);
+            this.invulnerable = Objects.requireNonNullElse(nbt.getBoolean("invulnerable"), false);
+            this.instabuild = Objects.requireNonNullElse(nbt.getBoolean("instabuild"), false);
+            this.flySpeed = Objects.requireNonNullElse(nbt.getFloat("flySpeed"), flySpeed);
+            this.walkSpeed = Objects.requireNonNullElse(nbt.getFloat("walkSpeed"), walkSpeed);
         }
-        public PlayerAbilities(){
-            this.nbt=NBT.Compound(a->{}).toMutableCompound();
-            this.walkSpeed(walkSpeed).flySpeed(flySpeed).flying(flying).instabuild(instabuild).invulnerable(invulnerable).mayFly(mayFly).mayBuild(mayBuild);
+
+        @Override
+        public NBTCompound toCompound() {
+            return NBT.Compound(root -> {
+                root.set("mayfly", NBT.Boolean(this.mayFly));
+                root.set("mayBuild", NBT.Boolean(this.mayBuild));
+                root.set("flying", NBT.Boolean(this.flying));
+                root.set("invulnerable", NBT.Boolean(this.invulnerable));
+                root.set("instabuild", NBT.Boolean(this.instabuild));
+                root.setFloat("flySpeed", this.flySpeed);
+                root.setFloat("walkSpeed", this.walkSpeed);
+            });
         }
-        private final MutableNBTCompound nbt;
-        private float flySpeed=0.05f;
-        private float walkSpeed=0.1f;
-        private boolean flying=false;
-        private boolean mayFly=false;
-        private boolean mayBuild=true;
-        private boolean instabuild=false;
-        private boolean invulnerable=false;
+
+        public PlayerAbilities() {
+        }
+
+        private float flySpeed = 0.05f;
+        private float walkSpeed = 0.1f;
+        private boolean flying = false;
+        private boolean mayFly = false;
+        private boolean mayBuild = true;
+        private boolean instabuild = false;
+        private boolean invulnerable = false;
 
         public float flySpeed() {
             return flySpeed;
@@ -380,55 +426,45 @@ public class Player extends Entity implements io.github.koufu193.core.game.entit
             return flying;
         }
 
-        NBTCompound nbt(){
-            return nbt.toCompound();
-        }
-
         public PlayerAbilities flying(boolean flying) {
             this.flying = flying;
-            this.nbt.set("flying", NBT.Boolean(flying));
             return this;
         }
 
         public PlayerAbilities flySpeed(float flySpeed) {
             this.flySpeed = flySpeed;
-            this.nbt.setFloat("flySpeed",flySpeed);
             return this;
         }
 
         public PlayerAbilities instabuild(boolean instabuild) {
             this.instabuild = instabuild;
-            this.nbt.set("instabuild", NBT.Boolean(instabuild));
             return this;
         }
 
         public PlayerAbilities invulnerable(boolean invulnerable) {
             this.invulnerable = invulnerable;
-            this.nbt.set("invulnerable", NBT.Boolean(invulnerable));
             return this;
         }
 
         public PlayerAbilities mayBuild(boolean mayBuild) {
             this.mayBuild = mayBuild;
-            this.nbt.set("mayBuild", NBT.Boolean(mayBuild));
             return this;
         }
 
         public PlayerAbilities mayFly(boolean mayFly) {
             this.mayFly = mayFly;
-            this.nbt.set("mayfly", NBT.Boolean(mayFly));
             return this;
         }
 
         public PlayerAbilities walkSpeed(float walkSpeed) {
             this.walkSpeed = walkSpeed;
-            this.nbt.setFloat("walkSpeed",walkSpeed);
             return this;
         }
+
     }
 
-
-    public record Property(String lang, byte viewDistance, ChatMode chatMode, boolean chatColors, byte display, MainHand mainHand, boolean filtering, boolean showList){
+    public record Property(String lang, byte viewDistance, ChatMode chatMode, boolean chatColors, byte display,
+                           MainHand mainHand, boolean filtering, boolean showList) {
 
     }
 }

@@ -7,6 +7,7 @@ import io.github.koufu193.network.packets.AbstractPacket;
 import org.jetbrains.annotations.NotNull;
 
 public class ServerboundSetPlayerRotationPacket extends ServerboundMovementPacket {
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Float,DataTypes.Float,DataTypes.Bool);

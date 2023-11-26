@@ -41,6 +41,7 @@ public class ClientboundUpdatePlayerInfoPacket extends AbstractPacket {
                 (byte)actionList.stream().mapToInt(PlayerAction::mask).reduce(0,(a,b)->a|b),actionsArray
         );
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Byte, new DataTypes.DataType<PlayerActions>() {

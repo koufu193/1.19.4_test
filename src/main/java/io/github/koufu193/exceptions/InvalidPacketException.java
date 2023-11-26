@@ -1,4 +1,4 @@
-package io.github.koufu193.core.properties.exceptions;
+package io.github.koufu193.exceptions;
 
 import io.github.koufu193.network.packets.AbstractPacket;
 

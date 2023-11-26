@@ -16,6 +16,7 @@ public class ClientboundSynchronizePlayerPositionPacket extends AbstractPacket {
         return this.teleportId;
     }
 
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.Double, DataTypes.Double, DataTypes.Double, DataTypes.Float,DataTypes.Float,DataTypes.Byte,DataTypes.VarInt);

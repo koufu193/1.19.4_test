@@ -19,6 +19,7 @@ public class ClientboundUpdateEntityRotationPacket extends AbstractPacket {
     public ClientboundUpdateEntityRotationPacket(int entityId, @NotNull Angle yaw, @NotNull Angle pitch, boolean onGround){
         fields(entityId,yaw,pitch,onGround);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.VarInt,DataTypes.Angle,DataTypes.Angle,DataTypes.Bool);

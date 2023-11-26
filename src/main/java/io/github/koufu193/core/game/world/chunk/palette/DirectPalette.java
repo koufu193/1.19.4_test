@@ -1,21 +1,22 @@
 package io.github.koufu193.core.game.world.chunk.palette;
 
-import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Material;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.util.BitStorage;
-import org.jglrxavpok.hephaistos.mca.BlockState;
+import io.github.koufu193.util.FixedLengthBitStorage;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
 public class DirectPalette implements Palette {
     private final int bits;
-    private final BlockState[] states;
+    private final Material[] blocks;
 
-    public DirectPalette(BlockState[] states) {
+    public DirectPalette(@NotNull Material[] blocks) {
         this.bits = Palette.FULL_BITS_PER_BLOCK;
-        this.states = Arrays.copyOf(states, states.length);
+        this.blocks = Arrays.copyOf(blocks, blocks.length);
     }
 
     @Override
@@ -29,19 +30,17 @@ public class DirectPalette implements Palette {
     }
 
     @Override
-    public void write(OutputStream output) throws IOException {
+    public void write(@NotNull OutputStream output) throws IOException {
         byte[] data = bytes();
         output.write(this.bits);
         output.write(DataTypes.VarInt.encode(longArrayLength()));
         output.write(data);
     }
+
     private byte[] bytes() {
-        BitStorage storage = new BitStorage(longArrayLength() * Long.SIZE);
-        int pad = 64 % this.bits;
-        int num = 64 / this.bits;
-        for (int i = 0; i < states.length; i++) {
-            storage.write(this.bits, Material.fromId(states[i].component1()).blockId());
-            if ((i + 1) % num == 0) storage.write(pad, 0);
+        FixedLengthBitStorage storage = new FixedLengthBitStorage(this.bits,longArrayLength() * Long.SIZE);
+        for (Material block : blocks) {
+            storage.write(block.blockId());
         }
         return storage.byteArray();
     }

@@ -6,6 +6,7 @@ import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ClientboundSetContainerSlotPacket extends InventoryPacket {
@@ -14,6 +15,7 @@ public class ClientboundSetContainerSlotPacket extends InventoryPacket {
         if(item==null) item=ItemStack.AIR;
         fields(windowId,stateId,slot,item);
     }
+    @NotNull
     @Override
     public PacketFormat format(){
         return PacketFormat.of(DataTypes.Byte,DataTypes.VarInt,DataTypes.Short,DataTypes.Item);

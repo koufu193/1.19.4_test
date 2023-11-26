@@ -19,6 +19,7 @@ public class ClientboundSetHeadRotationPacket extends AbstractPacket {
     public ClientboundSetHeadRotationPacket(int entityId, @NotNull Angle yaw){
         fields(entityId,yaw);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.VarInt,DataTypes.Angle);

@@ -11,6 +11,7 @@ public class ClientboundSetDefaultSpawnPositionPacket extends AbstractPacket {
     public ClientboundSetDefaultSpawnPositionPacket(@NotNull Location location,float angle){
         this.fields(location,angle);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.LongLocation, DataTypes.Float);

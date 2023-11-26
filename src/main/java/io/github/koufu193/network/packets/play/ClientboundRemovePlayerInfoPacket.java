@@ -12,6 +12,7 @@ public class ClientboundRemovePlayerInfoPacket extends AbstractPacket {
     public ClientboundRemovePlayerInfoPacket(@NotNull UUID... ids){
         fields((Object) ids);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.UUID.array());

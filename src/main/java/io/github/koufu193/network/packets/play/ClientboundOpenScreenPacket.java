@@ -18,6 +18,7 @@ public class ClientboundOpenScreenPacket extends InventoryPacket{
     public ClientboundOpenScreenPacket(int windowId, int windowType, @NotNull TextComponent title){
         this.fields(windowId,windowType,title);
     }
+    @NotNull
     @Override
     public PacketFormat format() {
         return PacketFormat.of(DataTypes.VarInt,DataTypes.VarInt,DataTypes.Chat);
