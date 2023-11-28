@@ -73,7 +73,7 @@ public class Entity implements IEntity {
     @NotNull
     @Override
     public Location location() {
-        return this.location.clone();
+        return this.location;
     }
 
     @Override

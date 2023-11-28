@@ -2,50 +2,39 @@ package io.github.koufu193.core.game.data;
 
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.core.game.world.chunk.Chunk;
+import io.github.koufu193.core.game.world.chunk.block.Block;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-
-public class Location implements Cloneable{
-    private World world;
-    private double x;
-    private double y;
-    private double z;
-    private float yaw;
-    private float pitch;
+public record Location(@Nullable World world,double x,double y,double z,float yaw,float pitch){
     public Location(double x,double y,double z){
         this(null,x,y,z);
     }
-    public Location(World world,double x,double y,double z){
+
+    public Location(@Nullable World world,double x,double y,double z){
         this(world,x,y,z,0f,0f);
     }
-    public Location(World world,double x,double y,double z,float yaw,float pitch){
-        this.world=world;
-        this.x=x;
-        this.y=y;
-        this.z=z;
-        this.yaw=yaw;
-        this.pitch=pitch;
+
+    public Location(@Nullable World world,long position){
+        this(world,(position>>38),(position<<52)>>52,(position<<26)>>26);
     }
     public Location(double x,double y,double z,float yaw,float pitch){
         this(null,x,y,z,yaw,pitch);
     }
+    @NotNull
 
     public Location world(World world) {
-        this.world = world;
-        return this;
+        return new Location(world,x,y,z,yaw,pitch);
     }
 
-    public World world() {
-        return world;
-    }
     public int blockX(){
-        return (int)x;
+        return (int) Math.floor(x);
     }
     public int blockY(){
-        return (int)y;
+        return (int)Math.floor(y);
     }
     public int blockZ(){
-        return (int)z;
+        return (int)Math.floor(z);
     }
     public int chunkX(){
         return blockX()>>4;
@@ -53,111 +42,45 @@ public class Location implements Cloneable{
     public int chunkZ(){
         return blockZ()>>4;
     }
+    @Nullable
+    public Block getBlock(){
+        if(world==null) return null;
+        return chunk().getBlock(blockX(),blockY(),blockZ());
+    }
+    @Nullable
     public Chunk chunk(){
         if(this.world==null) return null;
         return world.chunk(chunkX(),chunkZ());
     }
 
-    public double x() {
-        return x;
-    }
-
-    public double y() {
-        return y;
-    }
-
-    public float pitch() {
-        return pitch;
-    }
-
-    public double z() {
-        return z;
-    }
-
-    public float yaw() {
-        return yaw;
-    }
-
+    @NotNull
     public Location pitch(float pitch) {
-        this.pitch = pitch;
-        return this;
+        return new Location(world,x,y,z,yaw,pitch);
     }
+    @NotNull
 
     public Location x(double x) {
-        this.x = x;
-        return this;
+        return new Location(world,x,y,z,yaw,pitch);
     }
+    @NotNull
 
     public Location y(double y) {
-        this.y = y;
-        return this;
+        return new Location(world,x,y,z,yaw,pitch);
     }
+    @NotNull
 
     public Location yaw(float yaw) {
-        this.yaw = yaw;
-        return this;
+        return new Location(world,x,y,z,yaw,pitch);
     }
-
+    @NotNull
     public Location z(double z) {
-        this.z = z;
-        return this;
+        return new Location(world,x,y,z,yaw,pitch);
     }
+    @NotNull
     public Location add(double x,double y,double z){
-        this.x+=x;
-        this.y+=y;
-        this.z+=z;
-        return this;
+        return new Location(world,this.x+x,this.y+y,this.z+z,yaw,pitch);
     }
     public long toLong(){
         return ((long) (((int) x) & 0x3FFFFFF) << 38) | ((long) (((int) z) & 0x3FFFFFF) << 12) | (((int)y) & 0xFFF);
-    }
-    public static Location from(long l){
-        return new Location((l>>38),(l<<52)>>52,(l<<26)>>26);
-    }
-
-    @Override
-    public Location clone(){
-        return new Location(world(),x(),y(),z(),yaw(),pitch());
-    }
-
-    @Override
-    public String toString() {
-        return "Location{" +
-                "world=" + world +
-                ", x=" + x +
-                ", y=" + y +
-                ", z=" + z +
-                ", yaw=" + yaw +
-                ", pitch=" + pitch +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Location location)) return false;
-
-        if (Double.compare(location.x, x) != 0) return false;
-        if (Double.compare(location.y, y) != 0) return false;
-        if (Double.compare(location.z, z) != 0) return false;
-        if (Float.compare(location.yaw, yaw) != 0) return false;
-        if (Float.compare(location.pitch, pitch) != 0) return false;
-        return Objects.equals(world, location.world);
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp;
-        result = world != null ? world.hashCode() : 0;
-        temp = Double.doubleToLongBits(x);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(y);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(z);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + (yaw != +0.0f ? Float.floatToIntBits(yaw) : 0);
-        result = 31 * result + (pitch != +0.0f ? Float.floatToIntBits(pitch) : 0);
-        return result;
     }
 }

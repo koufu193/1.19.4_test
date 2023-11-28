@@ -75,7 +75,7 @@ public class ClientboundLoginPacket extends AbstractPacket {
         return PacketFormat.of(
                 DataTypes.Int, DataTypes.Bool, DataTypes.Byte,DataTypes.Byte,DataTypes.Identifier.array(),DataTypes.NBT,DataTypes.Identifier,DataTypes.Identifier,
                 DataTypes.Long,DataTypes.VarInt,DataTypes.VarInt,DataTypes.VarInt,DataTypes.Bool,DataTypes.Bool,DataTypes.Bool,DataTypes.Bool,DataTypes.Bool,
-                DataTypes.Identifier.encodeOptional(a->(Boolean)a[16]).encodeIfNonnull().decodeOptional(a->(Boolean)a[16]),DataTypes.LongLocation.encodeOptional(a->(Boolean)a[16]).encodeIfNonnull().decodeOptional(a->(Boolean)a[16])
+                DataTypes.Identifier.encodeOptional(a->(Boolean)a[16]).encodeIfNonnull().decodeOptional(a->(Boolean)a[16]),DataTypes.Position.encodeOptional(a->(Boolean)a[16]).encodeIfNonnull().decodeOptional(a->(Boolean)a[16])
         );
     }
 

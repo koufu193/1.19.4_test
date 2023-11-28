@@ -93,6 +93,6 @@ public class ItemStack implements Cloneable{
 
     @Override
     public ItemStack clone() {
-        return new ItemStack(material,amount,meta.clone());
+        return new ItemStack(material,amount,meta);
     }
 }

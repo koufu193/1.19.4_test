@@ -10,6 +10,7 @@ import io.github.koufu193.core.game.data.Identifier;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.world.chunk.Chunk;
 import io.github.koufu193.core.game.world.chunk.ChunkLoader;
+import io.github.koufu193.core.game.world.chunk.block.Block;
 import io.github.koufu193.core.game.world.dimension.DimensionType;
 import io.github.koufu193.server.MinecraftServer;
 import io.github.koufu193.util.FileUtils;
@@ -83,7 +84,10 @@ public class World {
     public Path worldFolder() {
         return worldFolder;
     }
-
+    @Nullable
+    public Block getBlock(int x,int y,int z){
+        return new Location(this,x,y,z).getBlock();
+    }
     @NotNull
     public Chunk chunk(int chunkX, int chunkZ) {
         return this.chunkCache.getOrLoad(chunkX, chunkZ);

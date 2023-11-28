@@ -7,6 +7,7 @@ import io.github.koufu193.core.game.commands.nodes.arguments.IntegerArgumentNode
 import io.github.koufu193.core.game.commands.nodes.arguments.StringArgumentNode;
 import io.github.koufu193.core.game.data.Location;
 import io.github.koufu193.core.game.data.Material;
+import io.github.koufu193.core.game.data.block.BlockMeta;
 import io.github.koufu193.core.game.data.component.ChatColor;
 import io.github.koufu193.core.game.data.component.TextComponent;
 import io.github.koufu193.core.game.data.inventory.*;
@@ -20,16 +21,19 @@ import io.github.koufu193.core.game.network.listener.KeepAlivePacketListener;
 import io.github.koufu193.core.game.network.listener.PacketListeners;
 import io.github.koufu193.core.game.network.listener.debug.UndefinedPacketAlerter;
 import io.github.koufu193.core.game.world.World;
+import io.github.koufu193.core.game.world.chunk.block.Block;
 import io.github.koufu193.network.handlers.play.KeepAliveHandler;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.network.packets.play.*;
 import io.github.koufu193.network.packets.play.channels.BrandChannel;
 import io.github.koufu193.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
+import org.jglrxavpok.hephaistos.nbt.NBTCompound;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PlayHandler implements IHandler {
     private final Player player;
@@ -52,6 +56,7 @@ public class PlayHandler implements IHandler {
         player.packetHandler().teleport(player.location());
         player.packetHandler().sendPacket(new ClientboundWorldTimePacket(10L, -10L));
         player.teleport(player.location().y(256).x(5).z(5));
+        AtomicBoolean zz=new AtomicBoolean(false);
         RootCommandNode rootNode = (
                 RootCommandNode.root().then(
                         LiteralCommandNode.literal("ktp").then(
@@ -97,7 +102,9 @@ public class PlayHandler implements IHandler {
                                             IPlayer player1 = (IPlayer) executor;
                                             player1.chunkSender().load((Integer)command.args("x"),(Integer)command.args("z"));
                                         }))))
-                )
+                ).then(LiteralCommandNode.literal("change").execute(((executor, command) -> {
+                    zz.set(!zz.get());
+                })))
         );
         List<ClientboundUpdatePlayerInfoPacket.PlayerActions> actionsList=new ArrayList<>();
         server.onlinePlayers().forEach(player1 -> {
@@ -153,6 +160,37 @@ public class PlayHandler implements IHandler {
                     player1.packetHandler().sendPacket(finalPacket);
                     if(finalOa !=null) player1.packetHandler().sendPacket(finalOa);
                 });
+                Block it=player.location().add(0,-1,0).getBlock();
+                if(it!=null){
+                    if(!zz.get()&&it.type().isAir()) {
+                        int v=(int) (Math.random()*200)*2+1;
+                        player.packetHandler().sendPacket(new ClientboundBlockUpdatePacket(it.location(), v));
+                        player.location().chunk().setBlock(it.location().blockX(), it.location().blockY(), it.location().blockZ(), new BlockMeta() {
+                            @Override
+                            public Material material() {
+                                return Material.GOLD_BLOCK;
+                            }
+
+                            @Override
+                            public NBTCompound toCompound() {
+                                return NBTCompound.EMPTY;
+                            }
+                        });
+                    } else if (zz.get()) {
+                        player.packetHandler().sendPacket(new ClientboundBlockUpdatePacket(it.location(), Material.AIR));
+                        player.location().chunk().setBlock(player.location().blockX(), player.location().blockY() - 1, player.location().blockZ(), new BlockMeta() {
+                            @Override
+                            public Material material() {
+                                return Material.AIR;
+                            }
+
+                            @Override
+                            public NBTCompound toCompound() {
+                                return NBTCompound.EMPTY;
+                            }
+                        });
+                    }
+                }
             }
         }
         while (player.isOnline()) {

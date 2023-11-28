@@ -76,7 +76,7 @@ public final class ChunkLoader implements AutoCloseable{
     }
 
     private static long packChunkXZ(int chunkX, int chunkZ) {
-        return ((long) chunkX << 32) | (chunkZ);
+        return ((long) chunkX << 32) | (chunkZ&-1);
     }
 
     @Override

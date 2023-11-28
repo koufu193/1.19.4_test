@@ -59,14 +59,14 @@ public final class RegionFileReader implements AutoCloseable {
         if (offset.notGenerated()) return new Chunk(world,chunkX,chunkZ);
         return readChunkFromFile(world, offset);
     }
-
+    @NotNull
     private Chunk readChunkFromFile(@NotNull World world, @NotNull OffsetData offset) throws IOException, NBTException {
         if (offset.offset4Kib() < 0 || size4Kib <= offset.offset4Kib())
             throw new IndexOutOfBoundsException(String.format("offset#offset4Kib must be between %d and %d,actual %d", 0, size4Kib - 1, offset.offset4Kib));
         this.channel.position(offset.offsetBytes());
         return readChunk(world, this.channel);
     }
-
+    @NotNull
     private static Chunk readChunk(@NotNull World world, @NotNull ByteChannel input) throws IOException, NBTException {
         NBTCompound chunkNBT = readChunkNBT(input);
         return new Chunk(world, World.MAX_Y_SECTION,chunkNBT);
@@ -124,7 +124,7 @@ public final class RegionFileReader implements AutoCloseable {
 
     private static int packXZ(int chunkX, int chunkZ) {
         checkValidXZ(chunkX, chunkZ);
-        return (chunkX << 5) | (chunkZ);
+        return (chunkZ << 5) | (chunkX);
     }
 
     private static void checkValidXZ(int chunkX, int chunkZ) {

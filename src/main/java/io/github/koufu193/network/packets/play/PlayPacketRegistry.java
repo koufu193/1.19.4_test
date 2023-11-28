@@ -45,6 +45,7 @@ public class PlayPacketRegistry implements PacketRegistry {
             reg(ClientboundUpdateEntityRotationPacket::new);
             reg(ClientboundTeleportEntityPacket::new);
             reg(ClientboundSetHeadRotationPacket::new);
+            reg(ClientboundBlockUpdatePacket::new);
         }
 
         private void reg(Supplier<AbstractPacket> supp) {

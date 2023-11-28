@@ -45,29 +45,38 @@ public final class ChunkSection {
     public byte getSectionY() {
         return sectionY;
     }
-    public Block block(int x,int y,int z){
-        if(x<0||15<x) throw new IllegalArgumentException("x must be between 0 and 15");
-        if(y<0||15<y) throw new IllegalArgumentException("y must be between 0 and 15");
-        if(z<0||15<z) throw new IllegalArgumentException("z must be between 0 and 15");
+    public Block getBlock(int x, int y, int z){
+        checkValidXYZ(x,y,z);
         return this.blocks[(x<<8)|(y<<4)|z];
     }
+    public void setBlock(int x,int y,int z,@NotNull BlockMeta meta){
+        checkValidXYZ(x, y, z);
+        this.blocks[(x<<8)|(y<<4)|z]=new Block(getBlock(x,y,z).location(),meta);
+    }
+
     @NotNull
     public Block[] blocks(){
         return Arrays.copyOf(this.blocks,this.blocks.length);
     }
+    private static void checkValidXYZ(int x,int y,int z){
+        if(x<0||15<x) throw new IllegalArgumentException("'x' must be between 0 and 15");
+        if(y<0||15<y) throw new IllegalArgumentException("'y' must be between 0 and 15");
+        if(z<0||15<z) throw new IllegalArgumentException("'z' must be between 0 and 15");
+    }
     private static Block[] parseBlocks(@NotNull Location baseLocation, @NotNull NBTCompoundLike nbt){
         if(!nbt.containsKey("data")) return createEmptyBlocks(baseLocation);
         NBTList<?> palette=Objects.requireNonNull(nbt.getList("palette"),"'palette' not found");
+        BlockMeta[] metaPalette=parsePalette(palette);
+        if(metaPalette.length==1) return createSingleBlocks(baseLocation,metaPalette[0]);
         int bitsPerBlock=Math.max(4,BitUtils.calculateBitsToStore(palette.getSize()-1));
         FixedLengthBitStorage storage=new FixedLengthBitStorage(bitsPerBlock,Objects.requireNonNull(nbt.getLongArray("data"),"'data' not found").copyArray());
-        BlockMeta[] metaPalette=parsePalette(palette);
         Block[] blocks=new Block[16*16*16];
         for(int x=0;x<16;x++){
             for(int y=0;y<16;y++){
                 for(int z=0;z<16;z++){
                     int index=(x<<8)|(y<<4)|(z);
                     int v= (int) storage.read();
-                    blocks[index]=new Block(baseLocation.clone().add(x,y,z),metaPalette[v].material(),metaPalette[v].toCompound());
+                    blocks[index]=new Block(baseLocation.add(x,y,z),metaPalette[v].material(),metaPalette[v].toCompound());
                 }
             }
         }
@@ -88,23 +97,36 @@ public final class ChunkSection {
 
                 @Override
                 public NBTCompound toCompound() {
-                    return NBTCompound.EMPTY;
+                    return nbt;
                 }
             };
         }
         return metaPalette;
     }
-    private static Block[] createEmptyBlocks(@NotNull Location baseLocation){
+    private static Block[] createSingleBlocks(@NotNull Location baseLocation, @NotNull BlockMeta meta){
         Block[] blocks=new Block[16*16*16];
         for(int x=0;x<16;x++){
             for(int y=0;y<16;y++){
                 for(int z=0;z<16;z++){
                     int index=(x<<8)|(y<<4)|(z);
-                    blocks[index]=new Block(baseLocation.clone().add(x,y,z),Material.AIR,NBTCompound.EMPTY);
+                    blocks[index]=new Block(baseLocation.add(x,y,z),meta);
                 }
             }
         }
         return blocks;
+    }
+    private static Block[] createEmptyBlocks(@NotNull Location baseLocation){
+        return createSingleBlocks(baseLocation, new BlockMeta() {
+            @Override
+            public Material material() {
+                return Material.AIR;
+            }
+
+            @Override
+            public NBTCompound toCompound() {
+                return NBTCompound.EMPTY;
+            }
+        });
     }
     private static int calculateBitsPerBlock(int paletteLength){
         return Math.max(4,Integer.toBinaryString(paletteLength).length());

@@ -161,7 +161,7 @@ public final class DataTypes {
             return java.lang.Long.BYTES * 2;
         }
     };
-    public static final DataType<NBT> NBT = new DataType<NBT>() {
+    public static final DataType<NBT> NBT = new DataType<>() {
         @Override
         public org.jglrxavpok.hephaistos.nbt.NBT decode(ByteBuffer buffer) {
             try (NBTReader reader = new NBTReader(new InputStream() {
@@ -194,6 +194,7 @@ public final class DataTypes {
                 throw new RuntimeException(e);
             }
         }
+
         @Override
         public int size(org.jglrxavpok.hephaistos.nbt.NBT value) {
             try {
@@ -248,14 +249,14 @@ public final class DataTypes {
         }
 
         @Override
-        public int size(io.github.koufu193.core.game.data.Identifier value) {
+        public int size(Identifier value) {
             return DataTypes.String.size(value.toString());
         }
     };
-    public static final DataType<Location> LongLocation = new DataType<>() {
+    public static final DataType<Location> Position = new DataType<>() {
         @Override
         public Location decode(ByteBuffer buffer) {
-            return io.github.koufu193.core.game.data.Location.from(buffer.getLong());
+            return new Location(null,buffer.getLong());
         }
 
         @Override

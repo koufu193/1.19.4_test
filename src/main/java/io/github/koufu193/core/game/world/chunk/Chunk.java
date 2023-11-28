@@ -1,5 +1,6 @@
 package io.github.koufu193.core.game.world.chunk;
 
+import io.github.koufu193.core.game.data.block.BlockMeta;
 import io.github.koufu193.core.game.world.World;
 import io.github.koufu193.core.game.world.chunk.block.Block;
 import org.jetbrains.annotations.NotNull;
@@ -48,12 +49,29 @@ public class Chunk {
     public int chunkZ() {
         return this.chunkZ;
     }
-    public Block block(int x,int y,int z){
-        return blockByRelativeLocation(x&0x0f,y,z&0x0f);
+    public Block getBlock(int x, int y, int z){
+        checkValidXZ(x,z);
+        if(!(minYSection*16<=y&&y<(minYSection+sections.length)*16)) return null;
+        return getBlockByRelativeLocation(x&0x0f,y,z&0x0f);
     }
-    private Block blockByRelativeLocation(int x,int y,int z){
+    public void setBlock(int x, int y, int z, @NotNull BlockMeta meta){
+        checkValidXZ(x, z);
+        if(!(minYSection*16<=y&&y<(minYSection+sections.length)*16)) return;
+        setBlockByRelativeLocation(x&0xf,y,z&0xf,meta);
+    }
+    private void checkValidXZ(int x, int z){
+        if(!(chunkX*16<=x&&x<(chunkX+1)*16))
+            throw new IllegalArgumentException(String.format("'x' must be between %d and %d actual:%d",chunkX*16,(chunkX+1)*16-1,x));
+        if(!(chunkZ*16<=z&&z<(chunkZ+1)*16))
+            throw new IllegalArgumentException(String.format("'z' must be between %d and %d actual:%d",chunkZ*16,(chunkZ+1)*16-1,z));
+    }
+    private Block getBlockByRelativeLocation(int x, int y, int z){
         ChunkSection section=sections[(y-minYSection*16)/16];
-        return section.block(x,y-section.getSectionY()*16,z);
+        return section.getBlock(x,y-section.getSectionY()*16,z);
+    }
+    private void setBlockByRelativeLocation(int x,int y,int z,@NotNull BlockMeta meta){
+        ChunkSection section=sections[(y-minYSection*16)/16];
+        section.setBlock(x,y-section.getSectionY()*16,z,meta);
     }
     public long[] getMotionBlocking() {
         return Arrays.copyOf(this.motionBlocking, this.motionBlocking.length);
@@ -73,7 +91,7 @@ public class Chunk {
             int x=compound.getInt("x");
             int y=compound.getInt("y");
             int z=compound.getInt("z");
-            block(x,y,z).nbt(compound);
+            getBlock(x,y,z).nbt(compound);
         });
     }
 

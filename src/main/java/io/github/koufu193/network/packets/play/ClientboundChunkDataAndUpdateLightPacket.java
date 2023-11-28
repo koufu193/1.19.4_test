@@ -13,6 +13,7 @@ import io.github.koufu193.network.PacketFormat;
 import io.github.koufu193.network.data.DataTypes;
 import io.github.koufu193.network.packets.AbstractPacket;
 import io.github.koufu193.util.BitUtils;
+import net.minecraft.network.protocol.game.PacketPlayOutBlockAction;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.mca.AnvilException;
 import org.jglrxavpok.hephaistos.mca.ChunkColumn;
@@ -55,7 +56,7 @@ public class ClientboundChunkDataAndUpdateLightPacket extends AbstractPacket {
                                 output.write(block.packedXZ());
                                 output.writeBytes(DataTypes.Short.encode(block.y()));
                                 output.writeBytes(DataTypes.VarInt.encode(block.type()));
-                                output.writeBytes(DataTypes.NBT.encode((NBTCompound)block.data()));
+                                output.writeBytes(DataTypes.NBT.encode(block.data()));
                             });
                             //light
                             data.write((byte) 0);
@@ -100,7 +101,7 @@ public class ClientboundChunkDataAndUpdateLightPacket extends AbstractPacket {
             new SingleValuePalette((int)(Math.random()*60)).write(sectionOutput);
             tileBlocks.addAll(Arrays.stream(section.blocks()).filter(block->!block.nbt().isEmpty()).map(block -> {
                 Location location=block.location();
-                return new BlockEntityData((int)location.x(),(int)location.y(),(int)location.z(),block.type().blockId(), block.nbt());
+                return new BlockEntityData((int)location.x(),(int)location.y(),(int)location.z(),block.type().blockId(),block.nbt());
             }).toList());
         }
         byte[] data = sectionOutput.toByteArray();
@@ -125,8 +126,8 @@ public class ClientboundChunkDataAndUpdateLightPacket extends AbstractPacket {
         return new HashSet<>(Arrays.asList(blocks));
     }
 
-    private record BlockEntityData(byte packedXZ, short y, int type,@NotNull NBTCompoundLike data) {
-        public BlockEntityData(int x, int y, int z, int type,@NotNull NBTCompoundLike data) {
+    private record BlockEntityData(byte packedXZ, short y, int type,@NotNull NBTCompound data) {
+        public BlockEntityData(int x, int y, int z, int type,@NotNull NBTCompound data) {
             this((byte) (((x & 15) << 4) | (z & 15)), (short) y, type, data);
         }
     }

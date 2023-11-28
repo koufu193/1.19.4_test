@@ -12,7 +12,7 @@ import java.util.UUID;
 public class ClientboundJoinPlayerPacket extends AbstractPacket {
     ClientboundJoinPlayerPacket(){}
     public ClientboundJoinPlayerPacket(int entityId, @NotNull UUID uuid, @NotNull Location location){
-        this.fields(entityId,uuid,location.clone());
+        this.fields(entityId,uuid,location);
     }
     public ClientboundJoinPlayerPacket(@NotNull IPlayer player){
         this(player.entityId(),player.uniqueId(),player.location());

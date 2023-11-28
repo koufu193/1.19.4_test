@@ -82,11 +82,11 @@ public class LevelDat implements ConvertibleToNBTCompound {
     }
 
     public void defaultSpawnLocation(@NotNull Location location) {
-        this.defaultSpawnLocation = location.clone();
+        this.defaultSpawnLocation = location;
     }
 
     public Location defaultSpawnLocation() {
-        return defaultSpawnLocation.clone();
+        return defaultSpawnLocation;
     }
 
     public void write() {

@@ -18,7 +18,7 @@ public class Block implements IBlock {
     @NotNull
     @Override
     public Location location() {
-        return this.location.clone();
+        return this.location;
     }
 
     @NotNull
@@ -29,7 +29,7 @@ public class Block implements IBlock {
 
     public Block(@NotNull Location location, @NotNull Material type, @NotNull NBTCompound nbt){
         this.type=type;
-        this.location=location.clone();
+        this.location=location;
         this.meta=new BlockMeta() {
             @Override
             public Material material() {
@@ -41,6 +41,11 @@ public class Block implements IBlock {
                 return nbt;
             }
         };
+    }
+    public Block(@NotNull Location location,@NotNull BlockMeta meta){
+        this.location=location;
+        this.type=meta.material();
+        this.meta=meta;
     }
     public void type(Material type){
         this.type=type;
